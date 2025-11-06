@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Recuperar contraseña - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:Inter,system-ui,Arial; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased;}
+    .wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+    .card{ width:420px; max-width:96%; background:#fff; border-radius:12px; padding:1.4rem; box-shadow:0 10px 30px rgba(2,20,18,0.06);}
+    h2{ color:var(--accent); margin:0 0 .4rem 0;}
+    p.sub{ color:#456b66; margin:0 0 1rem 0}
+    label{ display:block; margin-top:.6rem; font-size:.95rem; color:#1d3b37 }
+    input{ width:100%; padding:.6rem .7rem; margin-top:.35rem; border:1px solid #d7e0dc; border-radius:8px; }
+    .btn{ margin-top:1rem; width:100%; padding:.65rem; border-radius:8px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+    .muted{ font-size:.87rem; color:#476f69; margin-top:.6rem}
+    .note{ font-size:.86rem; color:#2f5f57; margin-top:.5rem}
+    .small-btn{ background:transparent; border:none; color:var(--accent); cursor:pointer; font-weight:700; padding:0; }
+    .error{ background:#ffecec; border:1px solid #f2c6c6; color:#7a2323; padding:.5rem; border-radius:8px; display:none; margin-top:.6rem}
+    .success{ background:#e9f7ef; border:1px solid #cdebd1; color:#155724; padding:.5rem; border-radius:8px; display:none; margin-top:.6rem}
+    .step { display:none; }
+    .step.active{ display:block; }
+    .code-box{ font-family:monospace; background:#f6f6f4; padding:.5rem; border-radius:6px; margin-top:.5rem; }
+    @media(max-width:480px){ .card{ padding:1rem } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>Recuperar contraseña</h2>
+      <p class="sub">Sigue los pasos para crear una nueva contraseña. (Flujo demo: código mostrado en pantalla).</p>
+
+      <div id="msg" class="error" role="alert"></div>
+      <div id="msgOk" class="success" role="status"></div>
+
+      <!-- Paso 1: solicitar email -->
+      <div id="step1" class="step active">
+        <label for="email">Correo registrado</label>
+        <input id="email" type="email" placeholder="tucorreo@ejemplo.com" />
+        <div class="muted">Si tu correo está registrado recibirás un código para restablecer tu contraseña.</div>
+        <button id="sendCode" class="btn">Enviar código</button>
+        <div class="note">¿No tienes cuenta? <a href="registrarse.html" style="color:var(--accent);font-weight:700">Crear cuenta</a></div>
+      </div>
+
+      <!-- Paso 2: verificar código -->
+      <div id="step2" class="step">
+        <label for="code">Código (6 dígitos)</label>
+        <input id="code" type="text" maxlength="6" placeholder="123456" />
+        <div class="note">Se ha enviado un código temporal. (En demo, el código aparece abajo).</div>
+        <div id="demoCodeContainer" class="code-box" style="display:none"></div>
+        <div style="display:flex;gap:.6rem;margin-top:.6rem">
+          <button id="verifyCode" class="btn" style="flex:1">Verificar código</button>
+          <button id="resendCode" class="small-btn" style="align-self:center">Reenviar</button>
+        </div>
+        <div style="margin-top:.5rem" class="muted">Código válido por <span id="timeLeft">15:00</span> minutos.</div>
+      </div>
+
+      <!-- Paso 3: nuevo password -->
+      <div id="step3" class="step">
+        <label for="newPass">Nueva contraseña</label>
+        <input id="newPass" type="password" placeholder="Mínimo 8 caracteres" />
+        <label for="newPass2">Confirmar contraseña</label>
+        <input id="newPass2" type="password" placeholder="Repetir contraseña" />
+        <div class="muted">La contraseña debe tener al menos 8 caracteres, una letra, un número y un símbolo.</div>
+        <button id="savePass" class="btn">Guardar nueva contraseña</button>
+      </div>
+
+      <div style="margin-top:.8rem; text-align:center;">
+        <a href="iniciarsesion.html" style="color:var(--accent); font-weight:700">Volver a iniciar sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**********************
+     * Recuperación (demo)
+     **********************/
+
+    // Administradores (según tu lista). Para seguridad en este demo: no permitimos restablecer estas contraseñas por el formulario.
+    const ADMINS_EMAILS = [
+      'ruizcarhua@hotmail.com','carlosdilas@hotmail.com','stevesolon@hotmail.com','arianakenari@hotmail.com',
+      'anthonyceramica@hotmail.com','mariasantosminchan@hotmail.com','danielhuacha@hotmail.com','jorgejulcamoro@hotmail.com',
+      'marinolulayco@hotmail.com','teofilohuacha@hotmail.com'
+    ];
+
+    // Elementos UI
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const msg = document.getElementById('msg');
+    const msgOk = document.getElementById('msgOk');
+
+    const emailEl = document.getElementById('email');
+    const sendBtn = document.getElementById('sendCode');
+
+    const codeEl = document.getElementById('code');
+    const demoCodeContainer = document.getElementById('demoCodeContainer');
+    const verifyBtn = document.getElementById('verifyCode');
+    const resendBtn = document.getElementById('resendCode');
+    const timeLeftEl = document.getElementById('timeLeft');
+
+    const newPassEl = document.getElementById('newPass');
+    const newPass2El = document.getElementById('newPass2');
+    const savePassBtn = document.getElementById('savePass');
+
+    // helpers storage keys
+    const USERS_KEY = 'mullu_users';
+    const RESET_KEY = 'mullu_reset_codes'; // guarda { email: { code, expires } }
+
+    // util: get users
+    function getUsers(){
+      try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; }
+    }
+    function saveUsers(arr){ localStorage.setItem(USERS_KEY, JSON.stringify(arr)); }
+
+    // util: reset codes store
+    function getResetCodes(){ try { return JSON.parse(localStorage.getItem(RESET_KEY) || '{}'); } catch(e){ return {}; } }
+    function saveResetCodes(obj){ localStorage.setItem(RESET_KEY, JSON.stringify(obj)); }
+
+    // mostrar mensaje
+    function showError(text){ msgOk.style.display='none'; msg.style.display='block'; msg.textContent = text; setTimeout(()=> msg.style.display='none',7000); }
+    function showOk(text){ msg.style.display='none'; msgOk.style.display='block'; msgOk.textContent = text; setTimeout(()=> msgOk.style.display='none',7000); }
+
+    // generar código 6 dígitos
+    function genCode(){ return String(Math.floor(100000 + Math.random()*900000)); }
+
+    // verificar formato email simple
+    function validEmail(e){ return /^\S+@\S+\.\S+$/.test(e); }
+
+    // reglas de contraseña (misma lógica que en registrarse)
+    function validarPassword(p){
+      if(!p || p.length < 8) return {ok:false, msg:'La contraseña debe tener al menos 8 caracteres.'};
+      if(!/[A-Za-z]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos una letra.'};
+      if(!/[0-9]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos un número.'};
+      if(!/[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?¡¿~`ºª]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos un símbolo.'};
+      return {ok:true};
+    }
+
+    // contador regresivo para expiración
+    let countdownInterval = null;
+    function startCountdown(untilTimestamp){
+      clearInterval(countdownInterval);
+      function update(){
+        const now = Date.now();
+        let diff = Math.max(0, untilTimestamp - now);
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        timeLeftEl.textContent = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+        if(diff <= 0){
+          clearInterval(countdownInterval);
+          showError('El código ha expirado. Solicita uno nuevo.');
+          // opcional: ocultar paso2
+        }
+      }
+      update();
+      countdownInterval = setInterval(update, 1000);
+    }
+
+    // Paso 1: enviar código
+    sendBtn.addEventListener('click', () => {
+      const email = (emailEl.value || '').trim().toLowerCase();
+      if(!validEmail(email)){ showError('Introduce un correo válido.'); return; }
+
+      // si email coincide con un admin fijo -> no permitir recuperación por esta vía
+      if(ADMINS_EMAILS.includes(email)){
+        showError('Las cuentas de administrador no pueden recuperarse desde esta página. Contacta al responsable del sistema.');
+        return;
+      }
+
+      // comprobar si existe usuario local
+      const users = getUsers();
+      const user = users.find(u => (u.email||'').toLowerCase() === email);
+      if(!user){
+        const createNow = confirm('No se encontró una cuenta con ese correo. ¿Deseas crear una cuenta ahora? (Aceptar = registrarse)');
+        if(createNow) window.location.href = 'registrarse.html';
+        return;
+      }
+
+      // generar y guardar código con expiración (15 minutos)
+      const code = genCode();
+      const expires = Date.now() + 15 * 60 * 1000; // 15 minutos
+      const codes = getResetCodes();
+      codes[email] = { code, expires };
+      saveResetCodes(codes);
+
+      // En entorno real: aquí se enviaría el código por email.
+      // En este demo lo mostramos para que puedas probar:
+      demoCodeContainer.style.display = 'block';
+      demoCodeContainer.textContent = `CÓDIGO (simulado): ${code}`;
+
+      // pasar a paso 2
+      step1.classList.remove('active');
+      step2.classList.add('active');
+      startCountdown(expires);
+      showOk('Código enviado (simulado). Revisa la caja de código abajo o tu correo en un sistema real.');
+    });
+
+    // reenvío
+    resendBtn.addEventListener('click', () => {
+      const email = (emailEl.value || '').trim().toLowerCase();
+      if(!validEmail(email)){ showError('Introduce un correo válido antes de reenviar.'); return; }
+      // buscar en códigos y regenerar nuevo código
+      const codes = getResetCodes();
+      if(!codes[email]){ showError('Debes solicitar un código primero.'); return; }
+      const code = genCode();
+      const expires = Date.now() + 15 * 60 * 1000;
+      codes[email] = { code, expires };
+      saveResetCodes(codes);
+      demoCodeContainer.style.display = 'block';
+      demoCodeContainer.textContent = `CÓDIGO (simulado, reenviado): ${code}`;
+      startCountdown(expires);
+      showOk('Código reenviado (simulado).');
+    });
+
+    // Paso 2: verificar código
+    verifyBtn.addEventListener('click', () => {
+      const email = (emailEl.value || '').trim().toLowerCase();
+      const entered = (codeEl.value || '').trim();
+      if(!validEmail(email) || !entered){ showError('Completa el correo y el código.'); return; }
+
+      const codes = getResetCodes();
+      const rec = codes[email];
+      if(!rec){ showError('No se encontró código para este correo. Solicita uno primero.'); return; }
+      if(Date.now() > rec.expires){ showError('El código ha expirado. Solicita uno nuevo.'); return; }
+      if(rec.code !== entered){ showError('Código inválido. Verifica e intenta de nuevo.'); return; }
+
+      // código correcto: permitir cambio de contraseña
+      step2.classList.remove('active');
+      step3.classList.add('active');
+      showOk('Código verificado. Ahora ingresa una nueva contraseña.');
+    });
+
+    // Paso 3: guardar nueva contraseña
+    savePassBtn.addEventListener('click', () => {
+      const email = (emailEl.value || '').trim().toLowerCase();
+      const p1 = newPassEl.value || '';
+      const p2 = newPass2El.value || '';
+      if(!p1 || !p2){ showError('Completa ambos campos de contraseña.'); return; }
+      if(p1 !== p2){ showError('Las contraseñas no coinciden.'); return; }
+      const check = validarPassword(p1);
+      if(!check.ok){ showError(check.msg); return; }
+
+      // actualizar usuario en localStorage
+      const users = getUsers();
+      const idx = users.findIndex(u => (u.email||'').toLowerCase() === email);
+      if(idx < 0){ showError('Usuario no encontrado.'); return; }
+      users[idx].password = p1;
+      saveUsers(users);
+
+      // limpiar código usado
+      const codes = getResetCodes();
+      if(codes[email]) delete codes[email];
+      saveResetCodes(codes);
+
+      showOk('Contraseña actualizada correctamente. Serás redirigido al inicio de sesión.');
+      setTimeout(() => { window.location.href = 'iniciarsesion.html'; }, 1400);
+    });
+
+    // Al cargar, si venimos desde login con email prellenado
+    document.addEventListener('DOMContentLoaded', () => {
+      const pre = sessionStorage.getItem('prefill_email');
+      if(pre){ emailEl.value = pre; sessionStorage.removeItem('prefill_email'); }
+    });
+
+  </script>
+</body>
+</html>

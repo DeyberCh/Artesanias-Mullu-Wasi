@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contacto | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root {
+      --accent: rgb(4,68,62);
+      --bg: rgb(227,237,232);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: #033d35;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    header {
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.25rem;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 0.5px;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 1rem;
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover {
+      opacity: 0.8;
+    }
+    main {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 {
+      color: var(--accent);
+      text-align: center;
+      font-size: 1.8rem;
+    }
+    form {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(2,20,18,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.2rem;
+      animation: fadeInUp 0.5s ease;
+    }
+    label {
+      font-weight: 600;
+      color: #045c51;
+    }
+    input, textarea {
+      padding: 0.65rem 0.75rem;
+      border: 1px solid rgba(4,68,62,0.2);
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      resize: none;
+    }
+    textarea {
+      min-height: 120px;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    button:hover {
+      background: rgb(3, 92, 84);
+    }
+    .msg-success, .msg-error {
+      text-align: center;
+      font-weight: 600;
+      margin-top: 1rem;
+      display: none;
+    }
+    .msg-success { color: green; }
+    .msg-error { color: red; }
+    footer {
+      background: var(--accent);
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌀 Mullu Wasi</div>
+    <nav class="nav-links">
+      <a href="index.html">Inicio</a>
+      <a href="categorias.html">Categorías</a>
+      <a href="carrito.html">Carrito</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="quienessomos.html">Quiénes somos</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Póngase en contacto con nosotros</h1>
+    <p style="text-align:center; max-width:700px; margin:0 auto; color:#355d57;">
+      Si tiene alguna pregunta, sugerencia o desea colaborar con nosotros, complete el siguiente formulario
+      y nos comunicaremos con usted lo antes posible.
+    </p>
+
+    <form id="contactForm">
+      <div>
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" name="nombre" required placeholder="Ingrese su nombre completo">
+      </div>
+      <div>
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" name="email" required placeholder="ejemplo@correo.com">
+      </div>
+      <div>
+        <label for="asunto">Asunto</label>
+        <input type="text" id="asunto" name="asunto" required placeholder="Motivo del mensaje">
+      </div>
+      <div>
+        <label for="mensaje">Mensaje</label>
+        <textarea id="mensaje" name="mensaje" required placeholder="Escriba su mensaje aquí..."></textarea>
+      </div>
+      <button type="submit">Enviar Mensaje</button>
+      <div class="msg-success">✅ Su mensaje fue enviado correctamente. ¡Gracias por contactarnos!</div>
+      <div class="msg-error">⚠️ Ocurrió un error. Intente nuevamente.</div>
+    </form>
+  </main>
+
+  <footer>
+    <p>
+      Mullu Wasi — La artesanía es el reflejo de tradición y cultura.  
+      © Derechos de autor Mullu Wasi. Todos los derechos reservados.
+    </p>
+  </footer>
+
+  <script>
+    const form = document.getElementById('contactForm');
+    const msgOk = document.querySelector('.msg-success');
+    const msgErr = document.querySelector('.msg-error');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      msgOk.style.display = 'none';
+      msgErr.style.display = 'none';
+
+      const nombre = form.nombre.value.trim();
+      const email = form.email.value.trim();
+      const asunto = form.asunto.value.trim();
+      const mensaje = form.mensaje.value.trim();
+
+      if (!nombre || !email || !asunto || !mensaje) {
+        msgErr.textContent = 'Por favor, complete todos los campos.';
+        msgErr.style.display = 'block';
+        return;
+      }
+
+      // Simulación de envío (sin backend)
+      setTimeout(() => {
+        msgOk.style.display = 'block';
+        form.reset();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

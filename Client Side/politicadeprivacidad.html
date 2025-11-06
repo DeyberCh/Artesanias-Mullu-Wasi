@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Política de Privacidad - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root { --accent: rgb(4,68,62); --bg: rgb(227,237,232); --muted: #375d57; }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color: #043e39;
+      -webkit-font-smoothing:antialiased;
+    }
+    header{
+      background: var(--accent);
+      color: #fff;
+      padding: .9rem 1rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:40;
+    }
+    .logo{ font-weight:800 }
+    nav a{ color:#fff; text-decoration:none; margin-left:.8rem; font-weight:700 }
+    main{ max-width:1000px; margin:1.2rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1.2rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    h1{ margin:0; color:var(--accent); }
+    h2{ margin-top:1rem; color:#1f4f48; }
+    p, li{ color:var(--muted); line-height:1.6; }
+    ul{ margin:0 0 0 1rem; }
+    .note{ font-size:.95rem; color:#4b7a73; margin-top:.6rem }
+    .last-updated{ font-size:.9rem; color:#2f6056; margin-top:.8rem }
+    footer{ background:var(--accent); color:#fff; text-align:center; padding:1rem; margin-top:1.2rem }
+    @media(max-width:720px){ main{ padding:.8rem } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌀 Mullu Wasi</div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="terminosycondiciones.html">Términos</a>
+      <a href="contacto.html">Contacto</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Política de Privacidad</h1>
+      <p class="note">Última actualización: <span id="lastUpdated">6 de noviembre de 2025</span></p>
+
+      <section>
+        <h2>1. Introducción</h2>
+        <p>En <strong>Mullu Wasi</strong> valoramos su privacidad y nos comprometemos a proteger sus datos personales. Esta Política de Privacidad explica qué información recopilamos, cómo la usamos, con quién la compartimos y los derechos que tiene respecto a sus datos.</p>
+      </section>
+
+      <section>
+        <h2>2. Responsable del tratamiento</h2>
+        <p>Responsable: <strong>Mullu Wasi</strong> (Proyecto de demostración / plataforma de comercio electrónico para artesanía). Para consultas sobre privacidad puede contactarnos a través del formulario en la página de <a href="contacto.html">Contacto</a>.</p>
+      </section>
+
+      <section>
+        <h2>3. Datos que recopilamos</h2>
+        <p>Dependiendo de cómo use la plataforma, podemos recopilar:</p>
+        <ul>
+          <li><strong>Datos de identificación:</strong> nombre, apellido, correo electrónico, teléfono.</li>
+          <li><strong>Datos de cuenta:</strong> contraseña (en el demo puede almacenarse en localStorage), fecha de registro, rol (cliente/administrador).</li>
+          <li><strong>Datos de pedido y pago:</strong> dirección de envío, historial de pedidos, método de pago (en la versión demo los pagos son simulados y no almacenamos datos sensibles de tarjetas).</li>
+          <li><strong>Datos del producto y preferencias:</strong> historial de navegación, productos vistos, idioma seleccionado.</li>
+          <li><strong>Datos técnicos:</strong> dirección IP, tipo de navegador, datos de cookies y tecnologías similares para el funcionamiento del sitio.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>4. Finalidades del tratamiento</h2>
+        <p>Utilizamos sus datos para las siguientes finalidades:</p>
+        <ul>
+          <li>Gestionar su cuenta y autenticar accesos.</li>
+          <li>Procesar pedidos, pagos y envíos.</li>
+          <li>Atender consultas y prestarle soporte.</li>
+          <li>Enviar comunicaciones relacionadas con su pedido y, si usted lo consiente, comunicaciones comerciales y boletines informativos.</li>
+          <li>Mejorar nuestros servicios, personalizar la experiencia y generar estadísticas de uso.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. Base legal para el tratamiento</h2>
+        <p>Cuando sea aplicable, tratamos sus datos basados en:</p>
+        <ul>
+          <li>El cumplimiento de un contrato (por ejemplo, para procesar un pedido).</li>
+          <li>Su consentimiento (por ejemplo, para recibir comunicaciones comerciales).</li>
+          <li>El interés legítimo de la plataforma (por ejemplo, para mejorar la seguridad y prevenir fraudes), siempre valorando sus derechos y libertades.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. Conservación de los datos</h2>
+        <p>Conservaremos sus datos mientras la cuenta exista y durante los períodos necesarios para cumplir con obligaciones legales, resolver disputas y hacer cumplir acuerdos. En el entorno demo (sin servidor) los datos pueden almacenarse en <code>localStorage</code> del navegador; si borra datos o limpia el almacenamiento local, la información se perderá.</p>
+      </section>
+
+      <section>
+        <h2>7. Cookies y tecnologías similares</h2>
+        <p>Empleamos cookies y tecnologías equivalentes para:</p>
+        <ul>
+          <li>Permitir el funcionamiento básico del sitio (cookies esenciales).</li>
+          <li>Recordar sus preferencias (por ejemplo, idioma y sesión).</li>
+          <li>Analizar el uso del sitio y mejorar la experiencia (analytics).</li>
+        </ul>
+        <p>Puede administrar o desactivar cookies desde la configuración de su navegador, lo que podría afectar algunas funcionalidades del sitio.</p>
+      </section>
+
+      <section>
+        <h2>8. Compartir y divulgar datos</h2>
+        <p>No vendemos sus datos personales. Podemos compartir datos con:</p>
+        <ul>
+          <li>Proveedores y prestadores de servicios necesarios para la operación (envío, pagos, hosting) — en la demo estos servicios no están conectados.</li>
+          <li>Autoridades competentes cuando la ley lo requiera.</li>
+        </ul>
+        <p>Si en el futuro conectamos pasarelas de pago o servicios externos, se informará claramente sobre los terceros implicados y las finalidades.</p>
+      </section>
+
+      <section>
+        <h2>9. Transferencias internacionales</h2>
+        <p>En algunos casos la información puede ser procesada en servidores ubicados fuera de su país. Adoptaremos las medidas razonables para garantizar un nivel de protección adecuado conforme a la normativa aplicable.</p>
+      </section>
+
+      <section>
+        <h2>10. Seguridad</h2>
+        <p>Implementamos medidas técnicas y organizativas razonables para proteger sus datos contra accesos no autorizados, pérdida o alteración. En esta versión de demostración muchos datos se almacenan localmente (localStorage) y la seguridad depende del entorno del usuario. Para producción recomendamos migrar a un backend seguro con HTTPS, almacenamiento cifrado y gestión de contraseñas segura.</p>
+      </section>
+
+      <section>
+        <h2>11. Derechos del interesado</h2>
+        <p>Usted puede, cuando proceda:</p>
+        <ul>
+          <li>Acceder a sus datos.</li>
+          <li>Rectificar información inexacta.</li>
+          <li>Solicitar la supresión (ser olvidado) cuando no exista obligación legal de conservar los datos.</li>
+          <li>Solicitar la limitación del tratamiento o la portabilidad de los datos que haya proporcionado.</li>
+          <li>Oponerse al tratamiento por motivos legítimos.</li>
+        </ul>
+        <p>Para ejercer sus derechos contáctenos mediante el formulario en la página de <a href="contacto.html">Contacto</a> indicando su petición y datos de identificación.</p>
+      </section>
+
+      <section>
+        <h2>12. Menores</h2>
+        <p>Nuestra plataforma no está dirigida a menores de edad. Si detectamos que un usuario es menor y se han recopilado datos sin el consentimiento de sus representantes, tomaremos medidas para eliminar la información. Si usted es padre/madre o tutor y desea solicitar la eliminación de datos, contáctenos.</p>
+      </section>
+
+      <section>
+        <h2>13. Cambios en la Política</h2>
+        <p>Podemos actualizar esta Política de Privacidad. Publicaremos la versión vigente en esta página con la fecha de última actualización. Si los cambios son relevantes, se lo notificaremos por los medios disponibles (correo o aviso en la plataforma).</p>
+      </section>
+
+      <section>
+        <h2>14. Contacto</h2>
+        <p>Si tiene preguntas sobre esta Política o desea ejercer sus derechos, utilice el formulario en <a href="contacto.html">Contacto</a> o escriba a <strong>contacto@mulluwasi.example</strong> (correo de ejemplo para la versión demo).</p>
+      </section>
+
+      <p class="last-updated">Al utilizar el sitio usted reconoce haber leído y aceptado esta Política de Privacidad.</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Mullu Wasi — La artesanía es el reflejo de tradición y cultura. © Derechos de autor Mullu Wasi.</p>
+  </footer>
+
+  <script>
+    // Mostrar fecha dinámica si prefieres (descomenta la línea de abajo para usar la fecha actual)
+    // document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('es-PE', { year:'numeric', month:'long', day:'numeric' });
+  </script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Categorías - Admin | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(247,250,248); --muted:#2f5f57; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; padding:.9rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; position:sticky; top:0; z-index:60; }
+    .brand{ font-weight:800; letter-spacing:.6px }
+    .container{ max-width:1100px; margin:1rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    .controls{ display:flex; gap:.6rem; align-items:center; margin-bottom:.8rem; flex-wrap:wrap; }
+    input[type="search"], input[type="text"], select { padding:.45rem .6rem; border-radius:8px; border:1px solid #e6efea; }
+    .btn{ padding:.5rem .7rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    .btn-danger{ background:#c94b4b; color:#fff; }
+    .grid{ display:grid; grid-template-columns: 1fr 360px; gap:1rem; align-items:start; }
+    .list{ max-height:520px; overflow:auto; margin-top:.6rem; }
+    .cat-row{ display:flex; justify-content:space-between; gap:.6rem; align-items:center; padding:.6rem; border-bottom:1px solid #f1f6f4; }
+    .cat-info{ display:flex; gap:.6rem; align-items:center; }
+    .badge{ background:#eef6f3; color:var(--accent); padding:.25rem .5rem; border-radius:999px; font-weight:700; }
+    .small{ font-size:.88rem; color:var(--muted) }
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:80; }
+    .modal-card{ width:94%; max-width:720px; background:#fff; border-radius:12px; padding:1rem; box-shadow:0 18px 50px rgba(2,20,18,0.3); max-height:90vh; overflow:auto; }
+    label{ display:block; margin-top:.6rem; color:#174b43; }
+    textarea, input[type="text"]{ width:100%; padding:.5rem .6rem; border-radius:8px; border:1px solid #e0ebe6; }
+    .modal-footer{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:1rem }
+    @media(max-width:900px){ .grid{ grid-template-columns:1fr } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Mullu Wasi — Categorías (Admin)</div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <a href="dashboard.html" class="btn btn-ghost">Volver al Dashboard</a>
+      <a href="usuarios.html" class="btn btn-ghost">Usuarios</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="controls" style="justify-content:space-between">
+        <div style="display:flex; gap:.6rem; align-items:center;">
+          <input id="searchCat" type="search" placeholder="Buscar categorías..." />
+          <select id="sortCat">
+            <option value="name-asc">Nombre A→Z</option>
+            <option value="name-desc">Nombre Z→A</option>
+            <option value="count-desc">Más productos</option>
+            <option value="count-asc">Menos productos</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:.6rem; align-items:center;">
+          <button id="btnNewCat" class="btn btn-primary">+ Nueva categoría</button>
+          <button id="btnResetCats" class="btn btn-ghost">Restablecer por defecto</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- left: lista -->
+        <section>
+          <h3 style="margin:0 0 .6rem 0; color:var(--accent)">Lista de categorías</h3>
+          <div class="list" id="catList" role="list" aria-live="polite"></div>
+        </section>
+
+        <!-- right: detalles / ayuda -->
+        <aside class="card">
+          <h4 style="margin:0 0 .6rem 0">Información</h4>
+          <p class="small">Las categorías te ayudan a organizar los productos. Cuando elimines una categoría puedes:</p>
+          <ul class="small">
+            <li>Reasignar sus productos a otra categoría.</li>
+            <li>O moverlos a <strong>Otros</strong>.</li>
+          </ul>
+          <div style="margin-top:1rem">
+            <strong>Categorías por defecto</strong>
+            <div class="small" style="margin-top:.4rem">Ceramica-Alfareria, Decoración, Fibras-Naturales, Instrumentos, Joyería, Madera, Textiles, Otros</div>
+          </div>
+          <div style="margin-top:1rem">
+            <button id="btnExportCats" class="btn btn-ghost">Exportar categorías</button>
+            <button id="btnImportCats" class="btn btn-ghost" style="margin-left:.4rem">Importar (JSON)</button>
+            <input id="fileCats" type="file" accept="application/json" style="display:none">
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal create/edit -->
+  <div id="catModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <h3 id="catModalTitle">Nueva categoría</h3>
+      <form id="catForm">
+        <input type="hidden" id="catId" />
+        <label for="catName">Nombre de la categoría</label>
+        <input id="catName" type="text" required placeholder="Ej: Ceramica-Alfareria" />
+
+        <label for="catDesc">Descripción (opcional)</label>
+        <textarea id="catDesc" rows="4" placeholder="Descripción corta"></textarea>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancelCat" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" id="btnSaveCat" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal delete / reassign -->
+  <div id="deleteModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <h3>Eliminar categoría</h3>
+      <p class="small" id="deleteInfo">La categoría contiene X productos. ¿Qué deseas hacer con ellos?</p>
+
+      <label for="reassignTo">Reasignar a</label>
+      <select id="reassignTo"></select>
+
+      <div style="margin-top:1rem; display:flex; gap:.6rem; justify-content:flex-end">
+        <button id="btnCancelDelete" class="btn btn-ghost">Cancelar</button>
+        <button id="btnConfirmDelete" class="btn btn-danger">Eliminar categoría</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Keys
+  const CATS_KEY = 'mullu_categories';
+  const PRODUCTS_KEY = 'mullu_products';
+  const SESSION_KEY = 'mullu_session';
+
+  // Session check
+  const session = (function(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } })();
+  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = 'iniciarsesion.html'; }
+
+  // DOM
+  const catList = document.getElementById('catList');
+  const searchCat = document.getElementById('searchCat');
+  const sortCat = document.getElementById('sortCat');
+  const btnNewCat = document.getElementById('btnNewCat');
+  const catModal = document.getElementById('catModal');
+  const catForm = document.getElementById('catForm');
+  const catModalTitle = document.getElementById('catModalTitle');
+  const catId = document.getElementById('catId');
+  const catName = document.getElementById('catName');
+  const catDesc = document.getElementById('catDesc');
+  const btnCancelCat = document.getElementById('btnCancelCat');
+  const btnResetCats = document.getElementById('btnResetCats');
+  const btnExportCats = document.getElementById('btnExportCats');
+  const btnImportCats = document.getElementById('btnImportCats');
+  const fileCats = document.getElementById('fileCats');
+
+  const deleteModal = document.getElementById('deleteModal');
+  const deleteInfo = document.getElementById('deleteInfo');
+  const reassignTo = document.getElementById('reassignTo');
+  const btnCancelDelete = document.getElementById('btnCancelDelete');
+  const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+
+  // Helpers localStorage
+  function getCategories(){ try { return JSON.parse(localStorage.getItem(CATS_KEY) || 'null') || []; } catch(e){ return []; } }
+  function saveCategories(arr){ localStorage.setItem(CATS_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+  function getProducts(){ try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch(e){ return []; } }
+  function saveProducts(arr){ localStorage.setItem(PRODUCTS_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+
+  // Default categories
+  const DEFAULT_CATS = [
+    { id: 'Ceramica-Alfareria', name: 'Ceramica-Alfareria', desc: '' },
+    { id: 'Decoración', name: 'Decoración', desc: '' },
+    { id: 'Fibras-Naturales', name: 'Fibras-Naturales', desc: '' },
+    { id: 'Instrumentos', name: 'Instrumentos', desc: '' },
+    { id: 'Joyería', name: 'Joyería', desc: '' },
+    { id: 'Madera', name: 'Madera', desc: '' },
+    { id: 'Textiles', name: 'Textiles', desc: '' },
+    { id: 'Otros', name: 'Otros', desc: '' }
+  ];
+
+  // initialize categories if not present
+  (function ensureCats(){
+    const cats = getCategories();
+    if(!cats || cats.length === 0){
+      saveCategories(DEFAULT_CATS.slice());
+    }
+  })();
+
+  // utility escape
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // compute product counts per category
+  function categoryCounts(){
+    const prods = getProducts();
+    const map = {};
+    prods.forEach(p => {
+      const cat = p.category || 'Otros';
+      map[cat] = (map[cat] || 0) + 1;
+    });
+    return map;
+  }
+
+  // render categories list
+  function renderCats(){
+    const q = (searchCat.value || '').trim().toLowerCase();
+    const sort = sortCat.value;
+    let cats = getCategories().slice();
+
+    // attach counts
+    const counts = categoryCounts();
+    cats = cats.map(c => ({ ...c, count: counts[c.id] || 0 }));
+
+    // filter
+    if(q) cats = cats.filter(c => c.name.toLowerCase().includes(q) || (c.desc||'').toLowerCase().includes(q));
+
+    // sort
+    if(sort === 'name-asc') cats.sort((a,b) => a.name.localeCompare(b.name));
+    if(sort === 'name-desc') cats.sort((a,b) => b.name.localeCompare(a.name));
+    if(sort === 'count-desc') cats.sort((a,b) => (b.count||0) - (a.count||0));
+    if(sort === 'count-asc') cats.sort((a,b) => (a.count||0) - (b.count||0));
+
+    // render
+    if(!cats || cats.length === 0){
+      catList.innerHTML = '<div style="padding:1rem;color:#567c74">No hay categorías.</div>';
+      return;
+    }
+
+    catList.innerHTML = cats.map(c => {
+      return `<div class="cat-row" data-id="${escapeHtml(c.id)}">
+        <div class="cat-info">
+          <div style="min-width:220px">
+            <strong>${escapeHtml(c.name)}</strong>
+            <div class="small">${escapeHtml(c.desc || '')}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.6rem;align-items:center">
+          <div class="badge">${c.count || 0}</div>
+          <button class="btn btn-ghost" data-action="edit" data-id="${escapeHtml(c.id)}">Editar</button>
+          <button class="btn btn-danger" data-action="del" data-id="${escapeHtml(c.id)}">Eliminar</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // attach events
+    Array.from(catList.querySelectorAll('button[data-action="edit"]')).forEach(b => b.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      openEditCat(id);
+    }));
+    Array.from(catList.querySelectorAll('button[data-action="del"]')).forEach(b => b.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      openDeleteCat(id);
+    }));
+  }
+
+  // open new category modal
+  btnNewCat.addEventListener('click', () => {
+    catId.value = '';
+    catModalTitle.textContent = 'Nueva categoría';
+    catName.value = '';
+    catDesc.value = '';
+    catModal.style.display = 'flex';
+    catName.focus();
+  });
+
+  // open edit
+  function openEditCat(id){
+    const cats = getCategories();
+    const c = cats.find(x => String(x.id) === String(id));
+    if(!c) return alert('Categoría no encontrada');
+    catId.value = c.id;
+    catName.value = c.name;
+    catDesc.value = c.desc || '';
+    catModalTitle.textContent = 'Editar categoría';
+    catModal.style.display = 'flex';
+    catName.focus();
+  }
+
+  // save category
+  catForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const idVal = (catId.value || '').trim();
+    const nameVal = (catName.value || '').trim();
+    const descVal = (catDesc.value || '').trim();
+
+    if(!nameVal){ alert('Nombre de categoría requerido'); return; }
+
+    let cats = getCategories();
+    // Use id equal to name (safe) but avoid duplicates. If editing id change is not allowed to keep product mapping.
+    if(idVal){
+      // editing existing
+      const idx = cats.findIndex(x => String(x.id) === String(idVal));
+      if(idx >= 0){
+        cats[idx].name = nameVal;
+        cats[idx].desc = descVal;
+        // keep id as original
+      } else {
+        alert('Categoría no encontrada');
+        return;
+      }
+    } else {
+      // create new, use name as id if possible and unique
+      let newId = nameVal.replace(/\s+/g,'-');
+      // ensure uniqueness
+      let suffix = 0;
+      while(cats.find(x => x.id === newId)){
+        suffix++;
+        newId = nameVal.replace(/\s+/g,'-') + '-' + suffix;
+      }
+      cats.push({ id: newId, name: nameVal, desc: descVal });
+    }
+
+    saveCategories(cats);
+    catModal.style.display = 'none';
+    renderCats();
+  });
+
+  btnCancelCat.addEventListener('click', () => { catModal.style.display = 'none'; });
+
+  // open delete modal
+  let toDeleteCatId = null;
+  function openDeleteCat(id){
+    toDeleteCatId = id;
+    const counts = categoryCounts();
+    const cnt = counts[id] || 0;
+    deleteInfo.innerText = `La categoría contiene ${cnt} producto(s). ¿Qué deseas hacer con ellos?`;
+    // fill reassignTo select: categories + 'Otros'
+    const cats = getCategories().slice().map(c => c.id).filter(x => x !== id);
+    reassignTo.innerHTML = `<option value="Otros">Mover a: Otros</option>` + cats.map(c => `<option value="${escapeHtml(c)}">Reasignar a: ${escapeHtml(c)}</option>`).join('');
+    deleteModal.style.display = 'flex';
+  }
+
+  btnCancelDelete.addEventListener('click', () => { deleteModal.style.display = 'none'; toDeleteCatId = null; });
+
+  btnConfirmDelete.addEventListener('click', () => {
+    if(!toDeleteCatId) return;
+    const target = reassignTo.value || 'Otros';
+    // reassign products
+    let prods = getProducts();
+    prods = prods.map(p => {
+      if((p.category || 'Otros') === toDeleteCatId){
+        return { ...p, category: target };
+      }
+      return p;
+    });
+    saveProducts(prods);
+    // remove category
+    let cats = getCategories();
+    cats = cats.filter(c => c.id !== toDeleteCatId);
+    saveCategories(cats);
+    deleteModal.style.display = 'none';
+    toDeleteCatId = null;
+    renderCats();
+    alert('Categoría eliminada y productos reasignados.');
+  });
+
+  // reset to defaults
+  btnResetCats.addEventListener('click', () => {
+    if(confirm('Restablecer las categorías a las predeterminadas? Esto NO cambiará productos (solo reemplaza la lista de categorías).')) {
+      saveCategories(DEFAULT_CATS.slice());
+      renderCats();
+    }
+  });
+
+  // export categories as JSON
+  btnExportCats.addEventListener('click', () => {
+    const cats = getCategories();
+    const blob = new Blob([JSON.stringify(cats, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'mullu_categories.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  // import categories
+  btnImportCats.addEventListener('click', () => fileCats.click());
+  fileCats.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(!Array.isArray(data)) { alert('JSON inválido: se espera un array'); return; }
+        // basic validation elements {id, name}
+        const valid = data.every(d => d && d.id && d.name);
+        if(!valid) { alert('Formato inválido: cada elemento debe tener id y name'); return; }
+        saveCategories(data);
+        alert('Importación completada.');
+        renderCats();
+      } catch(err){
+        console.error(err);
+        alert('Error leyendo archivo JSON.');
+      } finally {
+        fileCats.value = '';
+      }
+    };
+    reader.readAsText(f, 'UTF-8');
+  });
+
+  // categoryCounts helper (same as above)
+  function categoryCounts(){
+    const prods = getProducts();
+    const map = {};
+    prods.forEach(p => {
+      const cat = p.category || 'Otros';
+      map[cat] = (map[cat] || 0) + 1;
+    });
+    return map;
+  }
+
+  // listeners
+  [searchCat, sortCat].forEach(el => el.addEventListener('input', renderCats));
+  window.addEventListener('storage', (e) => {
+    if(e.key === CATS_KEY || e.key === PRODUCTS_KEY) renderCats();
+  });
+
+  // initial render
+  renderCats();
+
+  // accessibility: close modals on outside click
+  [catModal, deleteModal].forEach(mod => {
+    mod.addEventListener('click', (e) => { if(e.target === mod) mod.style.display = 'none'; });
+  });
+</script>
+</body>
+</html>

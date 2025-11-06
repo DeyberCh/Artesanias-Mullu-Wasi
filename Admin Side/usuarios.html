@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Usuarios - Mullu Wasi Admin</title>
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <style>
+    :root {
+      --accent: rgb(4, 68, 62);
+      --bg: rgb(227, 237, 232);
+      --muted: #2f4f4a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color: #043e39;
+      display: flex;
+      min-height: 100vh;
+    }
+    aside {
+      background: var(--accent);
+      color: #fff;
+      width: 240px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    aside h2 {
+      margin: 0 0 1rem 0;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    aside nav a {
+      color: #fff;
+      text-decoration: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: background 0.3s;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    aside nav a:hover,
+    aside nav a.active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    main {
+      flex: 1;
+      padding: 1.5rem;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    header h1 {
+      margin: 0;
+      color: var(--accent);
+    }
+    .search-bar {
+      display: flex;
+      gap: 0.5rem;
+    }
+    input[type="text"] {
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 220px;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.85;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+    tr:hover {
+      background: #f5f8f7;
+    }
+    .actions button {
+      padding: 0.4rem 0.6rem;
+      margin: 0 0.1rem;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 780px) {
+      aside { width: 60px; }
+      aside h2 { display: none; }
+      aside nav a { font-size: 0; padding: 0.6rem; text-align: center; }
+      aside nav a::before {
+        content: "•";
+        font-size: 1.2rem;
+      }
+      input[type="text"] { width: 120px; }
+      table, th, td { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h2>Admin Mullu Wasi</h2>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="productos-admin.html">Productos</a>
+      <a href="categorias-admin.html">Categorías</a>
+      <a href="usuarios.html" class="active">Usuarios</a>
+      <a href="ajustes.html">Ajustes</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Gestión de Usuarios</h1>
+      <div class="search-bar">
+        <input type="text" id="searchUser" placeholder="Buscar usuario..." />
+        <button id="btnNuevo">+ Nuevo Usuario</button>
+      </div>
+    </header>
+
+    <section>
+      <table id="tablaUsuarios">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Usuarios cargados dinámicamente -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    // Lista de administradores base
+    const admins = [
+      "ruizcarhua@hotmail.com",
+      "carlosdilas@hotmail.com",
+      "stevesolon@hotmail.com",
+      "arianakenari@hotmail.com",
+      "anthonyceramica@hotmail.com",
+      "mariasantosminchan@hotmail.com",
+      "danielhuacha@hotmail.com",
+      "jorgejulcamoro@hotmail.com",
+      "marinolulayco@hotmail.com",
+      "teofilohuacha@hotmail.com"
+    ];
+
+    // Simular datos de usuarios desde localStorage
+    function obtenerUsuarios() {
+      const data = JSON.parse(localStorage.getItem("usuariosMW")) || [];
+      return data;
+    }
+
+    function guardarUsuarios(lista) {
+      localStorage.setItem("usuariosMW", JSON.stringify(lista));
+    }
+
+    function renderUsuarios(filtro = "") {
+      const tbody = document.querySelector("#tablaUsuarios tbody");
+      const usuarios = obtenerUsuarios();
+      tbody.innerHTML = "";
+
+      usuarios
+        .filter(u => u.nombre.toLowerCase().includes(filtro.toLowerCase()) || u.email.toLowerCase().includes(filtro.toLowerCase()))
+        .forEach((u, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${u.nombre}</td>
+            <td>${u.email}</td>
+            <td>${admins.includes(u.email) ? "Administrador" : "Cliente"}</td>
+            <td class="actions">
+              <button onclick="editarUsuario(${idx})">Editar</button>
+              <button onclick="eliminarUsuario(${idx})" style="background:#c0392b">Eliminar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+    }
+
+    function eliminarUsuario(idx) {
+      if (confirm("¿Deseas eliminar este usuario?")) {
+        const usuarios = obtenerUsuarios();
+        usuarios.splice(idx, 1);
+        guardarUsuarios(usuarios);
+        renderUsuarios();
+      }
+    }
+
+    function editarUsuario(idx) {
+      const usuarios = obtenerUsuarios();
+      const u = usuarios[idx];
+      const nuevoNombre = prompt("Editar nombre:", u.nombre);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        usuarios[idx].nombre = nuevoNombre.trim();
+        guardarUsuarios(usuarios);
+        renderUsuarios();
+      }
+    }
+
+    document.getElementById("btnNuevo").addEventListener("click", () => {
+      const nombre = prompt("Nombre completo del usuario:");
+      const email = prompt("Email del usuario:");
+      if (nombre && email) {
+        const usuarios = obtenerUsuarios();
+        usuarios.push({ nombre, email });
+        guardarUsuarios(usuarios);
+        renderUsuarios();
+      }
+    });
+
+    document.getElementById("searchUser").addEventListener("input", e => {
+      renderUsuarios(e.target.value);
+    });
+
+    // Inicializar
+    renderUsuarios();
+  </script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Caja - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:Inter,system-ui,Arial; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    .container{ max-width:1100px; margin:1rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    h1{ color:var(--accent); margin:0 0 .6rem 0 }
+    .grid{ display:grid; grid-template-columns: 1fr 360px; gap:1rem; align-items:start; }
+    label{ display:block; margin-top:.6rem; font-size:.95rem; color:#213b36 }
+    input, select, textarea{ width:100%; padding:.55rem .7rem; border-radius:8px; border:1px solid #d7e0dc; margin-top:.35rem; }
+    .summary{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 6px 20px rgba(2,20,18,0.04); position:sticky; top:1rem; }
+    .line{ display:flex; justify-content:space-between; margin:.45rem 0; color:#374f4b }
+    .total { font-weight:800; font-size:1.15rem; color:var(--accent); }
+    .btn{ padding:.6rem .9rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; width:100% }
+    .small{ font-size:.9rem; color:#456b66 }
+    .note{ color:#476f69; font-size:.9rem; margin-top:.5rem }
+    .error{ background:#ffecec; border:1px solid #f2c6c6; padding:.5rem; border-radius:8px; color:#7a2323; display:none; margin-top:.6rem}
+    .success{ background:#e9f7ef; border:1px solid #cdebd1; padding:.5rem; border-radius:8px; color:#155724; display:none; margin-top:.6rem}
+    @media(max-width:920px){ .grid{ grid-template-columns:1fr } .summary{ position:relative } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Caja — confirmar pedido</h1>
+      <p class="small">Completa la información de envío y método de pago para finalizar tu compra.</p>
+
+      <div class="grid">
+        <div>
+          <form id="checkoutForm" novalidate>
+            <h3>Información del cliente</h3>
+            <label for="firstName">Nombre</label>
+            <input id="firstName" type="text" required>
+
+            <label for="lastName">Apellido</label>
+            <input id="lastName" type="text">
+
+            <label for="email">Email</label>
+            <input id="email" type="email" required>
+
+            <label for="phone">Teléfono</label>
+            <input id="phone" type="tel">
+
+            <h3 style="margin-top:1rem">Dirección de envío</h3>
+            <label for="address">Dirección</label>
+            <input id="address" type="text" required>
+
+            <label for="apto">Apartamento / Suite (opcional)</label>
+            <input id="apto" type="text">
+
+            <div style="display:flex; gap:.6rem;">
+              <div style="flex:1">
+                <label for="city">Ciudad</label>
+                <input id="city" type="text" required>
+              </div>
+              <div style="width:160px;">
+                <label for="postal">Código postal</label>
+                <input id="postal" type="text">
+              </div>
+            </div>
+
+            <label for="country">País</label>
+            <select id="country">
+              <option>Perú</option><option>Bolivia</option><option>Ecuador</option><option>Chile</option><option>Argentina</option><option>Otros</option>
+            </select>
+
+            <h3 style="margin-top:1rem">Método de pago</h3>
+            <label><input type="radio" name="payment" value="card" checked> Tarjeta de crédito / débito</label>
+            <label><input type="radio" name="payment" value="paypal"> PayPal (simulado)</label>
+
+            <div id="cardFields" style="margin-top:.6rem">
+              <label for="cardNumber">Número de tarjeta</label>
+              <input id="cardNumber" type="text" placeholder="4242 4242 4242 4242">
+
+              <div style="display:flex; gap:.6rem;">
+                <div style="flex:1">
+                  <label for="exp">Fecha de caducidad (MM/AA)</label>
+                  <input id="exp" type="text" placeholder="08/26">
+                </div>
+                <div style="width:120px;">
+                  <label for="cvv">CVV</label>
+                  <input id="cvv" type="text" placeholder="123">
+                </div>
+              </div>
+
+              <label for="cardName">Nombre en la tarjeta</label>
+              <input id="cardName" type="text">
+            </div>
+
+            <div class="error" id="errorBox"></div>
+            <div class="success" id="successBox"></div>
+
+            <div style="margin-top:1rem; display:flex; gap:.6rem;">
+              <button type="button" id="btnPlace" class="btn btn-primary">Realizar pedido</button>
+              <button type="button" id="btnBack" class="btn btn-ghost">Volver al carrito</button>
+            </div>
+          </form>
+        </div>
+
+        <aside>
+          <div class="summary">
+            <h3>Tu pedido</h3>
+            <div id="itemsList" style="max-height:320px; overflow:auto; margin-bottom:.6rem"></div>
+            <div class="line"><div>Subtotal</div><div id="sideSubtotal">S/ 0.00</div></div>
+            <div class="line"><div>Entrega</div><div id="sideDelivery">S/ 0.00</div></div>
+            <div class="line"><div>IGV (18%)</div><div id="sideTax">S/ 0.00</div></div>
+            <div class="line total"><div>Total</div><div id="sideTotal">S/ 0.00</div></div>
+            <div class="note" style="margin-top:.6rem">Al confirmar aceptas nuestros <a href="terminosycondiciones.html" style="color:var(--accent)">términos</a>.</div>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Keys
+  const CHECKOUT_KEY = 'mullu_checkout';
+  const CART_KEY = 'mullu_cart';
+  const ORDERS_KEY = 'mullu_orders';
+  const USERS_KEY = 'mullu_users';
+  const SESSION_KEY = 'mullu_session';
+
+  // Elements
+  const firstName = document.getElementById('firstName');
+  const lastName = document.getElementById('lastName');
+  const emailEl = document.getElementById('email');
+  const phoneEl = document.getElementById('phone');
+  const addressEl = document.getElementById('address');
+  const aptoEl = document.getElementById('apto');
+  const cityEl = document.getElementById('city');
+  const postalEl = document.getElementById('postal');
+  const countryEl = document.getElementById('country');
+
+  const cardFields = document.getElementById('cardFields');
+  const paymentRadios = document.querySelectorAll('input[name="payment"]');
+
+  const itemsList = document.getElementById('itemsList');
+  const sideSubtotal = document.getElementById('sideSubtotal');
+  const sideDelivery = document.getElementById('sideDelivery');
+  const sideTax = document.getElementById('sideTax');
+  const sideTotal = document.getElementById('sideTotal');
+
+  const btnPlace = document.getElementById('btnPlace');
+  const btnBack = document.getElementById('btnBack');
+  const errorBox = document.getElementById('errorBox');
+  const successBox = document.getElementById('successBox');
+
+  // Helpers
+  function getCheckout(){ try { return JSON.parse(localStorage.getItem(CHECKOUT_KEY) || 'null'); } catch(e){ return null; } }
+  function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e){ return []; } }
+  function getOrders(){ try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); } catch(e){ return []; } }
+  function saveOrders(arr){ localStorage.setItem(ORDERS_KEY, JSON.stringify(arr)); }
+  function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
+  function getUsers(){ try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; } }
+
+  function formatMoney(n){ return 'S/ ' + Number(n || 0).toFixed(2); }
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // Protect: require checkout data
+  const checkout = getCheckout();
+  if(!checkout){
+    alert('No hay datos de compra. Regresa al carrito.');
+    window.location.href = 'carrito.html';
+  }
+
+  // Prefill form with session user if available
+  const session = getSession();
+  const users = getUsers();
+  let currentUser = null;
+  if(session && session.email){
+    currentUser = users.find(u => (u.email||'').toLowerCase() === (session.email||'').toLowerCase()) || { fullname: session.name || '', email: session.email };
+  }
+
+  function prefill(){
+    if(currentUser){
+      const parts = (currentUser.fullname || '').split(' ');
+      firstName.value = parts.shift() || '';
+      lastName.value = parts.join(' ') || '';
+      emailEl.value = currentUser.email || '';
+      phoneEl.value = currentUser.phone || '';
+      // if user stored address fields, could prefill them (not required)
+      if(currentUser.address) addressEl.value = currentUser.address;
+      if(currentUser.city) cityEl.value = currentUser.city;
+      if(currentUser.postal) postalEl.value = currentUser.postal;
+      if(currentUser.country) countryEl.value = currentUser.country;
+    }
+  }
+
+  function renderSummary(){
+    const items = checkout.items || [];
+    itemsList.innerHTML = items.map(it => {
+      return `<div style="display:flex;justify-content:space-between;margin:.4rem 0">
+        <div><strong>${escapeHtml(it.name)}</strong> <div class="small">x ${it.qty}</div></div>
+        <div>${formatMoney(Number(it.price) * Number(it.qty || 1))}</div>
+      </div>`;
+    }).join('');
+
+    sideSubtotal.innerText = formatMoney(checkout.subtotal);
+    sideDelivery.innerText = formatMoney(checkout.deliveryPrice || checkout.deliveryPrice === 0 ? checkout.deliveryPrice : 0);
+    sideTax.innerText = formatMoney(checkout.igv || 0);
+    sideTotal.innerText = formatMoney(checkout.total || 0);
+  }
+
+  prefill();
+  renderSummary();
+
+  // Payment radio toggle (simulado)
+  paymentRadios.forEach(r => r.addEventListener('change', () => {
+    if(document.querySelector('input[name="payment"]:checked').value === 'card'){
+      cardFields.style.display = 'block';
+    } else {
+      cardFields.style.display = 'none';
+    }
+  }));
+
+  btnBack.addEventListener('click', () => window.location.href = 'carrito.html');
+
+  // Validaciones simples
+  function showError(text){ successBox.style.display = 'none'; errorBox.style.display = 'block'; errorBox.textContent = text; setTimeout(()=> errorBox.style.display = 'none', 8000); }
+  function showSuccess(text){ errorBox.style.display = 'none'; successBox.style.display = 'block'; successBox.textContent = text; setTimeout(()=> successBox.style.display = 'none', 6000); }
+
+  // Place order
+  btnPlace.addEventListener('click', () => {
+    // validar
+    const fn = (firstName.value || '').trim();
+    const em = (emailEl.value || '').trim();
+    const addr = (addressEl.value || '').trim();
+    const city = (cityEl.value || '').trim();
+    if(!fn) { showError('Ingresa tu nombre'); return; }
+    if(!em || !/^\S+@\S+\.\S+$/.test(em)) { showError('Email inválido'); return; }
+    if(!addr) { showError('Ingresa la dirección de envío'); return; }
+    if(!city) { showError('Ingresa la ciudad'); return; }
+
+    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+    // si tarjeta seleccionada, validar campos
+    if(paymentMethod === 'card'){
+      const cardNumber = (document.getElementById('cardNumber').value || '').replace(/\s+/g,'');
+      const exp = (document.getElementById('exp').value || '').trim();
+      const cvv = (document.getElementById('cvv').value || '').trim();
+      const cardName = (document.getElementById('cardName').value || '').trim();
+      if(!cardNumber || cardNumber.length < 12){ showError('Número de tarjeta inválido (demo).'); return; }
+      if(!exp){ showError('Fecha de caducidad inválida.'); return; }
+      if(!cvv || cvv.length < 3){ showError('CVV inválido.'); return; }
+      if(!cardName){ showError('Nombre en la tarjeta es requerido.'); return; }
+    }
+
+    // preparar orden
+    const orders = getOrders();
+    const orderId = 'ORD-' + Date.now();
+    const cartItems = (checkout.items || []).map(it => ({
+      productId: it.id || null,
+      productName: it.name,
+      qty: it.qty,
+      price: it.price
+    }));
+    const order = {
+      id: orderId,
+      customerName: fn + (lastName.value ? ' ' + lastName.value : ''),
+      customerEmail: em,
+      items: cartItems,
+      subtotal: Number(checkout.subtotal || 0),
+      deliveryPrice: Number(checkout.deliveryPrice || 0),
+      igv: Number(checkout.igv || 0),
+      total: Number(checkout.total || 0),
+      dateISO: new Date().toISOString(),
+      country: countryEl.value || 'Perú',
+      address: addr,
+      apto: aptoEl.value || '',
+      city: city,
+      postal: postalEl.value || '',
+      paymentMethod,
+      status: 'Pagado (simulado)'
+    };
+
+    // persistir orden
+    orders.unshift(order);
+    saveOrders(orders);
+
+    // opcional: guardar información en perfil del usuario (si existe)
+    if(session && session.email){
+      const users = getUsers();
+      const idx = users.findIndex(u => (u.email||'').toLowerCase() === (session.email || '').toLowerCase());
+      if(idx >= 0){
+        users[idx].address = addr;
+        users[idx].city = city;
+        users[idx].postal = postalEl.value || '';
+        users[idx].country = countryEl.value || '';
+        users[idx].phone = phoneEl.value || '';
+        // guardamos
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+    }
+
+    // limpiar carrito y checkout
+    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(CHECKOUT_KEY);
+
+    showSuccess('Pedido realizado correctamente. Serás redirigido al historial.');
+    setTimeout(() => {
+      window.location.href = 'historial.html';
+    }, 1200);
+  });
+
+  // if user lands directly and there is no checkout, redirect handled earlier
+</script>
+</body>
+</html>

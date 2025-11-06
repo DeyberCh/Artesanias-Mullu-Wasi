@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Iniciar sesión - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{
+      --accent: rgb(4,68,62);
+      --bg: rgb(227,237,232);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color:#043e39;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .wrap {
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:2rem;
+    }
+    .card {
+      width: 360px;
+      background:#fff;
+      border-radius:12px;
+      box-shadow: 0 8px 30px rgba(2,20,18,0.08);
+      padding:1.6rem;
+      animation: fadeIn .5s ease both;
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      margin-bottom: .8rem;
+    }
+    .brand .logo {
+      background: var(--accent);
+      color: #fff;
+      width:44px;height:44px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+      box-shadow: 0 3px 10px rgba(4,68,62,0.18);
+    }
+    h2 { margin:0 0 .6rem 0; color:var(--accent); font-size:1.25rem; }
+    p.sub { margin:.2rem 0 1rem 0; color:#4b6a66; font-size:.95rem; }
+    label{ display:block; font-size:.85rem; color:#1d3b37; margin-top:.6rem }
+    input[type="email"], input[type="password"]{
+      width:100%; padding:.6rem .7rem; margin-top:.35rem;
+      border:1px solid #d7e0dc; border-radius:8px; outline:none;
+      font-size:0.95rem;
+    }
+    .row{ display:flex; gap:.6rem; align-items:center; margin-top:.6rem }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: .65rem .9rem;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      width:100%;
+      margin-top:1rem;
+      box-shadow: 0 6px 16px rgba(4,68,62,0.08)
+    }
+    .small { font-size:.85rem; color:#3b6a64; margin-top:.6rem; display:flex; justify-content:space-between; align-items:center }
+    .link { color:var(--accent); text-decoration: none; font-weight:600 }
+    .toggle-pass { background:transparent; border:none; color:var(--accent); cursor:pointer; font-weight:600; padding:.2rem .4rem; border-radius:6px; }
+    .error { background:#ffecec; border:1px solid #f2c6c6; padding:.5rem; border-radius:8px; color:#7a2323; margin-top:.85rem; display:none; }
+    .footer-note { text-align:center; font-size:.85rem; color:#456b66; margin-top:1rem }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none} }
+    @media(max-width:420px){ .card{ width:100% } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <form id="loginForm" class="card" autocomplete="off" novalidate>
+      <div class="brand">
+        <div class="logo">🌀</div>
+        <div>
+          <strong>Mullu Wasi</strong><br>
+          <small style="color:#4b6a66">Inicia sesión en tu cuenta</small>
+        </div>
+      </div>
+
+      <h2>Bienvenido de nuevo</h2>
+      <p class="sub">Inicia sesión para acceder a tu panel — si eres administrador serás redirigido al dashboard.</p>
+
+      <div class="error" id="errorBox"></div>
+
+      <label for="email">Correo electrónico</label>
+      <input id="email" type="email" required placeholder="tucorreo@ejemplo.com" />
+
+      <label for="password">Contraseña</label>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input id="password" type="password" required placeholder="********" />
+        <button type="button" id="togglePass" class="toggle-pass" aria-label="Mostrar contraseña">Mostrar</button>
+      </div>
+
+      <div class="small">
+        <a href="recuperar.html" id="forgotLink" class="link">¿Olvidó su contraseña?</a>
+        <span style="font-size:.82rem;color:#3b6a64">¿Nuevo? <a href="registrarse.html" class="link">Crear cuenta</a></span>
+      </div>
+
+      <button type="submit" class="btn">Iniciar Sesión</button>
+
+      <div class="footer-note">
+        <small>Al iniciar sesión aceptas los términos y la política de privacidad.</small>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Lista de administradores (correo y contraseña)
+    const ADMINS = [
+      {email: 'ruizcarhua@hotmail.com', pass: 'RuizC!2025'},
+      {email: 'carlosdilas@hotmail.com', pass: 'CarD!8790'},
+      {email: 'stevesolon@hotmail.com', pass: 'Steve$Sol0n22'},
+      {email: 'arianakenari@hotmail.com', pass: 'Ariana#K3nari'},
+      {email: 'anthonyceramica@hotmail.com', pass: 'Anth0ny!2024'},
+      {email: 'mariasantosminchan@hotmail.com', pass: 'MariSminch@314'},
+      {email: 'danielhuacha@hotmail.com', pass: 'Dani3l-Huac#45'},
+      {email: 'jorgejulcamoro@hotmail.com', pass: 'JorgeJ!8812'},
+      {email: 'marinolulayco@hotmail.com', pass: 'Marino_Lu!198'},
+      {email: 'teofilohuacha@hotmail.com', pass: 'Teofilo*H2025'}
+    ];
+
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passInput = document.getElementById('password');
+    const togglePass = document.getElementById('togglePass');
+    const errorBox = document.getElementById('errorBox');
+
+    // Mostrar/ocultar contraseña
+    togglePass.addEventListener('click', () => {
+      if(passInput.type === 'password'){ passInput.type = 'text'; togglePass.textContent = 'Ocultar'; }
+      else { passInput.type = 'password'; togglePass.textContent = 'Mostrar'; }
+    });
+
+    // Helper: get users from localStorage (mullu_users)
+    function getLocalUsers(){
+      try {
+        return JSON.parse(localStorage.getItem('mullu_users') || '[]');
+      } catch(e) { return []; }
+    }
+
+    // Show error
+    function showError(msg){
+      errorBox.style.display = 'block';
+      errorBox.textContent = msg;
+      setTimeout(()=> { errorBox.style.display = 'none'; }, 6000);
+    }
+
+    // Manejar submit
+    loginForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const email = (emailInput.value || '').trim().toLowerCase();
+      const password = (passInput.value || '');
+
+      if(!email || !password){
+        showError('Rellena todos los campos.');
+        return;
+      }
+
+      // 1) buscar en lista de administradores (email y contraseña exactas)
+      const admin = ADMINS.find(a => a.email.toLowerCase() === email && a.pass === password);
+      if(admin){
+        // Guardar sesión mínima y redirigir a dashboard admin
+        localStorage.setItem('mullu_session', JSON.stringify({ email: admin.email, role: 'admin', name: admin.email }));
+        // Redirigir al panel administrador (ruta relativa tal como en la plantilla)
+        window.location.href = '../Admin Side/dashboard.html';
+        return;
+      }
+
+      // 2) si no es admin, buscar en usuarios guardados (mullu_users)
+      const users = getLocalUsers();
+      const user = users.find(u => (u.email || '').toLowerCase() === email);
+
+      if(user){
+        // comprobar contraseña del usuario
+        if(user.password === password){
+          localStorage.setItem('mullu_session', JSON.stringify({ email: user.email, role: 'client', name: user.fullname || user.email }));
+          // redirigir a panel cliente (index)
+          window.location.href = 'index.html';
+          return;
+        } else {
+          showError('Contraseña incorrecta. Si olvidaste tu contraseña, usa la opción de recuperarla.');
+          return;
+        }
+      }
+
+      // 3) Si no se encuentra en usuarios ni en admins -> sugerir registrarse
+      const wantsRegister = confirm('El correo no está registrado. ¿Deseas crear una cuenta nueva con este correo? (Aceptar = registrarse, Cancelar = volver)');
+      if(wantsRegister){
+        // Prellenar la página de registro con el email si deseas (usamos sessionStorage para pasar temporalmente)
+        sessionStorage.setItem('prefill_email', email);
+        window.location.href = 'registrarse.html';
+      } else {
+        showError('Inicio de sesión cancelado. Si tienes cuenta, verifica tus datos o regístrate.');
+      }
+    });
+
+    // Si llegamos con prefilling desde confirmación, colocar el correo
+    document.addEventListener('DOMContentLoaded', () => {
+      const pre = sessionStorage.getItem('prefill_email');
+      if(pre){ emailInput.value = pre; sessionStorage.removeItem('prefill_email'); }
+    });
+  </script>
+</body>
+</html>

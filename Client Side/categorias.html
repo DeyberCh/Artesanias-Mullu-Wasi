@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Categorías - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{
+      --accent: rgb(4,68,62);
+      --bg: rgb(227,237,232);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color:#043e39;
+      -webkit-font-smoothing:antialiased;
+    }
+    .container{ max-width:1200px; margin:1.2rem auto; padding:1rem; }
+    header.page-header{ display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; }
+    header .logo{ color:var(--accent); font-weight:800; font-size:1.25rem; }
+    .search-bar{ display:flex; gap:.6rem; align-items:center; }
+    .search-bar input{ padding:.5rem .6rem; border-radius:8px; border:1px solid #d7e0dc; width:280px; }
+    .layout{ display:grid; grid-template-columns: 260px 1fr; gap:1rem; align-items:start; }
+    /* left filter panel */
+    .filters{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.05); }
+    .category-list{ display:flex; flex-direction:column; gap:.4rem; margin-top:.6rem; }
+    .cat-btn{
+      text-align:left; padding:.45rem .6rem; border-radius:8px; border:1px solid transparent; cursor:pointer;
+      background:transparent; color:#234b45; font-weight:600;
+    }
+    .cat-btn.active{ background:rgba(4,68,62,0.08); border-color:rgba(4,68,62,0.12); color:var(--accent); }
+    .filter-section{ margin-top:1rem; }
+    .filter-section label{ display:block; font-size:.9rem; color:#2f5f57; margin-bottom:.35rem; }
+    .range-row{ display:flex; gap:.5rem; align-items:center; }
+    .range-row input{ padding:.45rem .5rem; border-radius:8px; border:1px solid #d7e0dc; width:100%; }
+    .btn-clear{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); padding:.45rem .6rem; border-radius:8px; cursor:pointer; font-weight:700; }
+    /* product area */
+    .controls{ display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; flex-wrap:wrap; }
+    .controls .left{ display:flex; gap:.6rem; align-items:center; }
+    .controls .right{ display:flex; gap:.6rem; align-items:center; }
+    .sort-select{ padding:.45rem .6rem; border-radius:8px; border:1px solid #d7e0dc; }
+    .grid-products{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; }
+    .product-card{ background:#fff; border-radius:12px; padding:.6rem; box-shadow:0 6px 18px rgba(2,20,18,0.04); transition:transform .2s ease, box-shadow .2s ease; display:flex; flex-direction:column; justify-content:space-between; }
+    .product-card:hover{ transform:translateY(-6px); box-shadow:0 12px 30px rgba(2,20,18,0.08); }
+    .product-card img{ width:100%; height:160px; object-fit:cover; border-radius:10px; }
+    .product-info{ padding:.5rem 0; }
+    .product-info h3{ margin:.2rem 0; font-size:1rem; color:#123; }
+    .product-info p.cat{ margin:0; font-size:.85rem; color:#3b6a64; font-weight:600; }
+    .product-actions{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-top:.5rem; }
+    .btn-add{ background:var(--accent); color:#fff; border:none; padding:.5rem .6rem; border-radius:8px; cursor:pointer; font-weight:700; }
+    .price{ font-weight:800; color:var(--accent); font-size:1rem; }
+    .empty{ padding:2rem; text-align:center; color:#567c74; background:#fff; border-radius:10px; }
+    @media(max-width:960px){ .layout{ grid-template-columns:1fr } .search-bar input{ width:160px } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <div class="logo">🌀 Mullu Wasi — Categorías</div>
+      <div class="search-bar">
+        <input id="globalSearch" type="search" placeholder="Buscar productos por nombre o categoría..." />
+        <button id="btnClearSearch" class="btn-clear">Limpiar</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Left filters -->
+      <aside class="filters" aria-label="Filtros de categorías">
+        <h3 style="margin:0;color:var(--accent)">Categorías</h3>
+        <div class="category-list" id="categoryList">
+          <!-- botones de categorias inyectados por JS -->
+        </div>
+
+        <div class="filter-section">
+          <label for="priceFrom">Precio — rango (S/)</label>
+          <div class="range-row">
+            <input id="priceFrom" type="number" placeholder="Desde" min="0" />
+            <input id="priceTo" type="number" placeholder="Hasta" min="0" />
+          </div>
+          <div style="margin-top:.6rem; display:flex; gap:.5rem;">
+            <button id="applyPrice" class="btn-clear">Aplicar</button>
+            <button id="resetFilters" class="btn-clear">Restablecer</button>
+          </div>
+        </div>
+
+        <div class="filter-section" style="margin-top:1rem">
+          <label class="small" style="color:#2f5f57">Información</label>
+          <div style="font-size:.92rem;color:#345d57">Selecciona una categoría para filtrar. Usa la búsqueda global o los filtros de precio para refinar los resultados.</div>
+        </div>
+      </aside>
+
+      <!-- Products -->
+      <section>
+        <div class="controls">
+          <div class="left">
+            <div id="selectedCategory" class="small" style="font-weight:800;color:#2f5f57">Mostrando: <span id="catName">Todas</span></div>
+          </div>
+          <div class="right">
+            <label for="sortBy" class="small">Ordenar por</label>
+            <select id="sortBy" class="sort-select">
+              <option value="relevance">Relevancia</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="productsGrid" class="grid-products" aria-live="polite">
+          <!-- tarjetas -->
+        </div>
+
+        <div id="noResults" class="empty" style="display:none;margin-top:1rem;">
+          No se encontraron productos con los filtros aplicados.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // Categorías definidas
+    const CATEGORIES = ['Ceramica-Alfareria','Decoración','Fibras-Naturales','Instrumentos','Joyería','Madera','Textiles','Otros'];
+
+    // DOM
+    const categoryList = document.getElementById('categoryList');
+    const productsGrid = document.getElementById('productsGrid');
+    const globalSearch = document.getElementById('globalSearch');
+    const priceFrom = document.getElementById('priceFrom');
+    const priceTo = document.getElementById('priceTo');
+    const applyPrice = document.getElementById('applyPrice');
+    const resetFilters = document.getElementById('resetFilters');
+    const sortBy = document.getElementById('sortBy');
+    const catName = document.getElementById('catName');
+    const btnClearSearch = document.getElementById('btnClearSearch');
+    const noResults = document.getElementById('noResults');
+
+    // Keys localStorage
+    const PRODUCTS_KEY = 'mullu_products';
+    const CART_KEY = 'mullu_cart';
+
+    // Estado de filtros
+    let selectedCategory = ''; // '' = todas
+    let searchQuery = '';
+    let fromPrice = null;
+    let toPrice = null;
+
+    // Helper: obtener productos (array)
+    function getProducts(){
+      try {
+        return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]');
+      } catch(e){
+        return [];
+      }
+    }
+
+    // Render lista de categorias
+    function renderCategories(){
+      categoryList.innerHTML = CATEGORIES.map(cat => {
+        return `<button class="cat-btn" data-cat="${cat}">${cat.replace('-', ' ')}</button>`;
+      }).join('');
+      // agregar boton "Todas"
+      const allBtn = document.createElement('button');
+      allBtn.className = 'cat-btn' + (selectedCategory === '' ? ' active' : '');
+      allBtn.textContent = 'Todas';
+      allBtn.dataset.cat = '';
+      categoryList.prepend(allBtn);
+
+      // attach events
+      Array.from(categoryList.querySelectorAll('.cat-btn')).forEach(b => {
+        b.addEventListener('click', () => {
+          const cat = b.dataset.cat || '';
+          // togglear seleccion: si clickeas la misma categoria la deseleccionas
+          if(selectedCategory === cat) selectedCategory = '';
+          else selectedCategory = cat;
+          updateActiveCategory();
+          applyFilters();
+        });
+      });
+
+      updateActiveCategory();
+    }
+
+    function updateActiveCategory(){
+      Array.from(categoryList.querySelectorAll('.cat-btn')).forEach(b => {
+        b.classList.toggle('active', (b.dataset.cat || '') === selectedCategory);
+      });
+      catName.textContent = selectedCategory ? selectedCategory : 'Todas';
+    }
+
+    // Render productos según filtros
+    function applyFilters(){
+      const prods = getProducts() || [];
+      searchQuery = (globalSearch.value || '').trim().toLowerCase();
+
+      let filtered = prods.filter(p => {
+        // categoría
+        if(selectedCategory && String(p.category) !== selectedCategory) return false;
+        // búsqueda
+        if(searchQuery){
+          const hay = (p.name || '').toString().toLowerCase().includes(searchQuery) ||
+                      (p.desc || '').toString().toLowerCase().includes(searchQuery) ||
+                      (p.category || '').toString().toLowerCase().includes(searchQuery);
+          if(!hay) return false;
+        }
+        // precio
+        const price = Number(p.price || 0);
+        if(fromPrice !== null && price < fromPrice) return false;
+        if(toPrice !== null && price > toPrice) return false;
+        return true;
+      });
+
+      // ordenar
+      const order = sortBy.value || 'relevance';
+      if(order === 'price-asc') filtered.sort((a,b) => Number(a.price) - Number(b.price));
+      if(order === 'price-desc') filtered.sort((a,b) => Number(b.price) - Number(a.price));
+
+      renderProducts(filtered);
+    }
+
+    function renderProducts(list){
+      if(!list || list.length === 0){
+        productsGrid.innerHTML = '';
+        noResults.style.display = 'block';
+        return;
+      }
+      noResults.style.display = 'none';
+      productsGrid.innerHTML = list.map(p => {
+        const img = p.image ? p.image : '../assets/img/placeholder.png';
+        return `<article class="product-card" data-id="${p.id}">
+          <img src="${img}" alt="${escapeHtml(p.name)}" loading="lazy" />
+          <div class="product-info">
+            <h3>${escapeHtml(p.name)}</h3>
+            <p class="cat">${escapeHtml(p.category)}</p>
+            <p class="price">S/ ${Number(p.price || 0).toFixed(2)}</p>
+          </div>
+          <div class="product-actions">
+            <button class="btn-add" data-id="${p.id}">Añadir al carrito</button>
+            <button class="btn-ghost" data-id="${p.id}" onclick="location.href='detalledeproductos.html?id=${p.id}'" style="border:1px solid rgba(4,68,62,0.08);padding:.45rem .6rem;border-radius:8px">Ver</button>
+          </div>
+        </article>`;
+      }).join('');
+
+      // attach add to cart listeners
+      Array.from(productsGrid.querySelectorAll('.btn-add')).forEach(b => b.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        addToCart(id);
+      }));
+
+      // clicking on card (not button) goes to detail
+      Array.from(productsGrid.querySelectorAll('.product-card')).forEach(card => {
+        card.addEventListener('click', (ev) => {
+          // si se clickeó un botón interno, ignorar (ya tiene su evento)
+          if(ev.target.closest('.btn-add') || ev.target.closest('button')) return;
+          const id = card.dataset.id;
+          window.location.href = `detalledeproductos.html?id=${id}`;
+        });
+      });
+    }
+
+    // Añadir al carrito (simplificado)
+    function addToCart(id){
+      const prods = getProducts();
+      const p = prods.find(x => String(x.id) === String(id));
+      if(!p){ alert('Producto no encontrado'); return; }
+      const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      const item = cart.find(i => String(i.id) === String(id));
+      if(item){ item.qty = Number(item.qty || 1) + 1; } else {
+        cart.push({ id: p.id, name: p.name, price: p.price, qty: 1, image: p.image || '', category: p.category });
+      }
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      // actualizar contador en header si existe
+      const cartCountEl = document.getElementById('cartCount');
+      if(cartCountEl) cartCountEl.textContent = cart.reduce((s,i) => s + (i.qty||0), 0);
+      alert('Producto añadido al carrito');
+    }
+
+    // util escape
+    function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    // eventos filtros
+    globalSearch.addEventListener('input', () => { applyFilters(); });
+    btnClearSearch.addEventListener('click', () => { globalSearch.value = ''; applyFilters(); });
+
+    applyPrice.addEventListener('click', () => {
+      const f = Number(priceFrom.value);
+      const t = Number(priceTo.value);
+      fromPrice = !isNaN(f) && f >= 0 ? f : null;
+      toPrice = !isNaN(t) && t >= 0 ? t : null;
+      if(fromPrice !== null && toPrice !== null && fromPrice > toPrice){
+        alert('El precio \"Desde\" no puede ser mayor que \"Hasta\".');
+        return;
+      }
+      applyFilters();
+    });
+
+    resetFilters.addEventListener('click', () => {
+      priceFrom.value = ''; priceTo.value = '';
+      fromPrice = null; toPrice = null;
+      selectedCategory = '';
+      updateActiveCategory();
+      sortBy.value = 'relevance';
+      globalSearch.value = '';
+      applyFilters();
+    });
+
+    sortBy.addEventListener('change', () => applyFilters());
+
+    // escucha cambios en localStorage (cuando admin agrega/edita productos)
+    window.addEventListener('storage', (e) => {
+      if(e.key === PRODUCTS_KEY) applyFilters();
+    });
+
+    // inicializar: render categorias y productos
+    (function init(){
+      renderCategories();
+      // if no products in storage, you may want to seed demo products (but we don't create seeds here)
+      applyFilters();
+    })();
+  </script>
+</body>
+</html>
+<script src="../assets/js/seed_products.js"></script>

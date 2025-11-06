@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Productos - Admin | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(247,250,248); --muted:#2f5f57; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; padding:.9rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; position:sticky; top:0; z-index:60; }
+    .brand{ font-weight:800; letter-spacing:.6px }
+    .container{ max-width:1200px; margin:1rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    .controls{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; margin-bottom:.8rem }
+    input[type="search"], select, input[type="file"]{ padding:.45rem .6rem; border-radius:8px; border:1px solid #e2ece7; }
+    .btn{ padding:.5rem .7rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    .btn-danger{ background:#c94b4b; color:#fff; }
+    .list{ max-height:520px; overflow:auto; margin-top:.6rem; }
+    .row{ display:grid; grid-template-columns: 56px 1fr 90px 90px 120px; gap:.6rem; align-items:center; padding:.6rem; border-bottom:1px solid #f1f6f4; }
+    .row .img{ width:56px;height:56px;border-radius:8px; overflow:hidden; background:#f4f7f5; display:flex; align-items:center; justify-content:center }
+    .row img{ width:100%; height:100%; object-fit:cover }
+    .small{ font-size:.88rem; color:var(--muted) }
+    .actions{ display:flex; gap:.4rem }
+    /* modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:80; }
+    .modal-card{ width:94%; max-width:820px; background:#fff; border-radius:12px; padding:1rem; box-shadow:0 18px 50px rgba(2,20,18,0.3); max-height:90vh; overflow:auto; }
+    label{ display:block; margin-top:.6rem; color:#174b43; }
+    input[type="text"], input[type="number"], textarea, select{ width:100%; padding:.5rem .6rem; border-radius:8px; border:1px solid #e0ebe6; }
+    textarea{ min-height:120px; }
+    .modal-footer{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:1rem }
+    .hint{ color:#4b7a73; font-size:.9rem; margin-top:.4rem }
+    @media(max-width:920px){ .row{ grid-template-columns: 48px 1fr 80px 80px auto } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Mullu Wasi — Productos (Admin)</div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <a href="dashboard.html" class="btn btn-ghost">Volver al Dashboard</a>
+      <button id="btnLogout" class="btn btn-danger">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h2 style="margin:0;color:var(--accent)">Gestión de Productos</h2>
+          <div class="small">Crear, editar, eliminar, importar y exportar productos</div>
+        </div>
+        <div style="display:flex;gap:.6rem;align-items:center">
+          <button id="btnExportCSV" class="btn btn-ghost">Exportar CSV</button>
+          <label class="btn btn-ghost" style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer">
+            Importar CSV
+            <input id="fileImport" type="file" accept=".csv" style="display:none">
+          </label>
+          <button id="btnNew" class="btn btn-primary">+ Nuevo producto</button>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:1rem">
+        <input id="searchInput" type="search" placeholder="Buscar por nombre, categoría o artesano..." />
+        <select id="sortBy">
+          <option value="sold">Más vendidos</option>
+          <option value="price-asc">Precio: menor → mayor</option>
+          <option value="price-desc">Precio: mayor → menor</option>
+          <option value="stock-asc">Stock: menor → mayor</option>
+          <option value="stock-desc">Stock: mayor → menor</option>
+        </select>
+        <input id="filterCategory" type="text" placeholder="Filtrar categoría (ej. Textiles)" />
+        <div style="margin-left:auto; display:flex; gap:.6rem; align-items:center">
+          <button id="btnRefresh" class="btn btn-ghost">Refrescar</button>
+        </div>
+      </div>
+
+      <div class="list" id="productsList" role="list">
+        <!-- filas de productos -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal para crear/editar producto -->
+  <div id="prodModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="prodModalTitle">
+      <h3 id="prodModalTitle">Nuevo producto</h3>
+
+      <form id="prodForm">
+        <input type="hidden" id="p_id" />
+        <label for="p_name">Nombre</label>
+        <input id="p_name" type="text" required />
+
+        <label for="p_desc">Descripción</label>
+        <textarea id="p_desc"></textarea>
+
+        <div style="display:flex;gap:.6rem;">
+          <div style="flex:1">
+            <label for="p_category">Categoría</label>
+            <select id="p_category">
+              <option value="Ceramica-Alfareria">Ceramica-Alfareria</option>
+              <option value="Decoración">Decoración</option>
+              <option value="Fibras-Naturales">Fibras-Naturales</option>
+              <option value="Instrumentos">Instrumentos</option>
+              <option value="Joyería">Joyería</option>
+              <option value="Madera">Madera</option>
+              <option value="Textiles">Textiles</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+          <div style="width:120px">
+            <label for="p_stock">Stock</label>
+            <input id="p_stock" type="number" min="0" value="0" />
+          </div>
+          <div style="width:140px">
+            <label for="p_price">Precio (S/)</label>
+            <input id="p_price" type="number" min="0" step="0.01" value="0" />
+          </div>
+        </div>
+
+        <label for="p_image">Ruta imagen (ej. ../assets/img/ejemplo.jpg)</label>
+        <input id="p_image" type="text" placeholder="../assets/img/placeholder.png" />
+
+        <label for="p_artisan">Artesano / Taller</label>
+        <input id="p_artisan" type="text" placeholder="Nombre del artesano" />
+
+        <div class="hint">Sugerencia: sube imágenes a <code>assets/img/</code> y luego coloca la ruta relativa aquí.</div>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancel" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" id="btnSave" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  // Keys
+  const PRODUCTS_KEY = 'mullu_products';
+
+  // DOM
+  const productsList = document.getElementById('productsList');
+  const searchInput = document.getElementById('searchInput');
+  const sortBy = document.getElementById('sortBy');
+  const filterCategory = document.getElementById('filterCategory');
+  const btnNew = document.getElementById('btnNew');
+  const prodModal = document.getElementById('prodModal');
+  const prodForm = document.getElementById('prodForm');
+  const p_id = document.getElementById('p_id');
+  const p_name = document.getElementById('p_name');
+  const p_desc = document.getElementById('p_desc');
+  const p_category = document.getElementById('p_category');
+  const p_stock = document.getElementById('p_stock');
+  const p_price = document.getElementById('p_price');
+  const p_image = document.getElementById('p_image');
+  const p_artisan = document.getElementById('p_artisan');
+  const btnCancel = document.getElementById('btnCancel');
+  const btnExportCSV = document.getElementById('btnExportCSV');
+  const fileImport = document.getElementById('fileImport');
+  const btnLogout = document.getElementById('btnLogout');
+  const btnRefresh = document.getElementById('btnRefresh');
+
+  // Helpers localStorage
+  function getProducts(){ try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch(e){ return []; } }
+  function saveProducts(arr){ localStorage.setItem(PRODUCTS_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+
+  // Utilities
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // Render list
+  function renderList(){
+    const q = (searchInput.value || '').trim().toLowerCase();
+    const catFilter = (filterCategory.value || '').trim().toLowerCase();
+    const prods = getProducts().slice();
+
+    // filtering
+    let list = prods.filter(p => {
+      if(q && !((p.name||'').toLowerCase().includes(q) || (p.desc||'').toLowerCase().includes(q) || (p.artisan||'').toLowerCase().includes(q))) return false;
+      if(catFilter && !((p.category||'').toLowerCase().includes(catFilter))) return false;
+      return true;
+    });
+
+    // sorting
+    const s = sortBy.value;
+    if(s === 'sold') list.sort((a,b) => (b.sold||0) - (a.sold||0));
+    if(s === 'price-asc') list.sort((a,b) => Number(a.price||0) - Number(b.price||0));
+    if(s === 'price-desc') list.sort((a,b) => Number(b.price||0) - Number(a.price||0));
+    if(s === 'stock-asc') list.sort((a,b) => Number(a.stock||0) - Number(b.stock||0));
+    if(s === 'stock-desc') list.sort((a,b) => Number(b.stock||0) - Number(a.stock||0));
+
+    if(!list.length){
+      productsList.innerHTML = '<div style="padding:1rem;color:#567c74">No hay productos con los filtros aplicados.</div>';
+      return;
+    }
+
+    productsList.innerHTML = list.map(p => {
+      const img = p.image || '../assets/img/placeholder.png';
+      return `<div class="row" data-id="${p.id}">
+        <div class="img"><img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" onerror="this.src='../assets/img/placeholder.png'"></div>
+        <div>
+          <strong>${escapeHtml(p.name)}</strong>
+          <div class="small">${escapeHtml(p.desc || '')}</div>
+          <div class="small">Artesano: ${escapeHtml(p.artisan || '-')}</div>
+        </div>
+        <div class="small">S/ ${Number(p.price||0).toFixed(2)}</div>
+        <div class="small">Stock: ${p.stock!=null?p.stock:0}</div>
+        <div class="actions">
+          <button class="btn btn-ghost" data-action="edit" data-id="${p.id}">Editar</button>
+          <button class="btn btn-danger" data-action="del" data-id="${p.id}">Eliminar</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // attach events
+    Array.from(productsList.querySelectorAll('button[data-action="edit"]')).forEach(b => b.addEventListener('click', (e) => {
+      openEdit(e.currentTarget.dataset.id);
+    }));
+    Array.from(productsList.querySelectorAll('button[data-action="del"]')).forEach(b => b.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      if(confirm('Eliminar producto? Esta acción no se puede deshacer.')) deleteProduct(id);
+    }));
+  }
+
+  // New product
+  btnNew.addEventListener('click', () => {
+    p_id.value = '';
+    document.getElementById('prodModalTitle')?.remove?.();
+    document.getElementById('prodModalTitle'); // no-op
+    document.getElementById('prodModalTitle');
+    document.getElementById('prodModalTitle'); // nothing; keep
+    // set modal title
+    document.getElementById('prodModalTitle')?.remove?.(); // ignore if not present
+    // set fields
+    document.getElementById('prodModalTitle');
+    // Actually set visible modal
+    document.getElementById('prodModalTitle'); // just safe no-op
+    // Fill modal with default values
+    p_name.value = '';
+    p_desc.value = '';
+    p_category.value = 'Ceramica-Alfareria';
+    p_stock.value = 0;
+    p_price.value = 0;
+    p_image.value = '../assets/img/placeholder.png';
+    p_artisan.value = '';
+    prodForm.querySelector('h3')?.remove?.(); // cleanup if duplicates
+    prodForm.parentElement.querySelector('h3').textContent = 'Nuevo producto';
+    prodModal.style.display = 'flex';
+  });
+
+  // Open edit
+  function openEdit(id){
+    const prods = getProducts();
+    const p = prods.find(x => String(x.id) === String(id));
+    if(!p) return alert('Producto no encontrado');
+    p_id.value = p.id;
+    p_name.value = p.name || '';
+    p_desc.value = p.desc || '';
+    p_category.value = p.category || 'Otros';
+    p_stock.value = p.stock || 0;
+    p_price.value = p.price || 0;
+    p_image.value = p.image || '../assets/img/placeholder.png';
+    p_artisan.value = p.artisan || '';
+    prodForm.parentElement.querySelector('h3').textContent = 'Editar producto';
+    prodModal.style.display = 'flex';
+  }
+
+  // Save product (create or update)
+  prodForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const id = (p_id.value || '').trim();
+    const name = (p_name.value || '').trim();
+    const desc = (p_desc.value || '').trim();
+    const category = p_category.value;
+    const stock = Number(p_stock.value || 0);
+    const price = Number(p_price.value || 0);
+    const image = (p_image.value || '').trim() || '../assets/img/placeholder.png';
+    const artisan = (p_artisan.value || '').trim();
+
+    if(!name){ alert('Nombre requerido'); return; }
+
+    const prods = getProducts();
+    if(id){
+      const idx = prods.findIndex(x => String(x.id) === String(id));
+      if(idx >= 0){
+        prods[idx] = { ...prods[idx], name, desc, category, stock, price, image, artisan };
+      } else {
+        alert('Producto no encontrado');
+        return;
+      }
+    } else {
+      const newId = String(Date.now());
+      prods.push({ id: newId, name, desc, category, stock, price, image, artisan, sold: 0 });
+    }
+    saveProducts(prods);
+    prodModal.style.display = 'none';
+    renderList();
+    alert('Producto guardado.');
+  });
+
+  // Cancel modal
+  btnCancel.addEventListener('click', () => { prodModal.style.display = 'none'; });
+
+  // Delete product
+  function deleteProduct(id){
+    let prods = getProducts();
+    prods = prods.filter(p => String(p.id) !== String(id));
+    saveProducts(prods);
+    renderList();
+  }
+
+  // Export CSV
+  btnExportCSV.addEventListener('click', () => {
+    const prods = getProducts();
+    if(!prods || prods.length === 0){ alert('No hay productos para exportar.'); return; }
+    const header = ['id','name','desc','category','stock','price','image','artisan','sold'];
+    const rows = [header.join(',')].concat(prods.map(p => {
+      return [`"${(p.id||'')}"`,`"${(p.name||'').replace(/"/g,'""')}"`,`"${(p.desc||'').replace(/"/g,'""')}"`,`"${(p.category||'')}"`,Number(p.stock||0),Number(p.price||0),`"${(p.image||'')}"`,`"${(p.artisan||'').replace(/"/g,'""')}"`,Number(p.sold||0)].join(',');
+    })).join('\\n');
+    const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'mullu_products_export.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  // Import CSV (simple parser, expects header)
+  fileImport.addEventListener('change', (e) => {
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      try {
+        const text = ev.target.result;
+        const lines = text.split(/\\r?\\n/).filter(l => l.trim() !== '');
+        if(lines.length <= 1){ alert('CSV vacío o sin datos.'); return; }
+        const header = lines[0].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(h => h.replace(/(^"|"$)/g,'').trim());
+        const rows = lines.slice(1);
+        const prods = getProducts();
+        rows.forEach(row => {
+          const cols = row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/(^"|"$)/g,''));
+          const obj = {};
+          header.forEach((h, i) => { obj[h] = cols[i]; });
+          // required: id or generate, name
+          const id = obj.id || String(Date.now() + Math.floor(Math.random()*9999));
+          const existing = prods.find(p => String(p.id) === String(id));
+          const product = {
+            id,
+            name: obj.name || obj.nombre || 'Sin nombre',
+            desc: obj.desc || obj.descripcion || '',
+            category: obj.category || obj.categoria || 'Otros',
+            stock: Number(obj.stock || 0),
+            price: Number(obj.price || obj.precio || 0),
+            image: obj.image || obj.imagen || '../assets/img/placeholder.png',
+            artisan: obj.artisan || obj.artesano || '',
+            sold: Number(obj.sold || 0)
+          };
+          if(existing){
+            // update
+            const idx = prods.findIndex(p => String(p.id) === String(id));
+            prods[idx] = { ...prods[idx], ...product };
+          } else {
+            prods.push(product);
+          }
+        });
+        saveProducts(prods);
+        alert('Importación completada.');
+        renderList();
+      } catch(err){
+        console.error(err); alert('Error procesando CSV. Asegúrate del formato.');
+      } finally {
+        fileImport.value = '';
+      }
+    };
+    reader.readAsText(f, 'UTF-8');
+  });
+
+  // Logout (simple)
+  btnLogout.addEventListener('click', () => {
+    if(confirm('Cerrar sesión admin?')){
+      localStorage.removeItem('mullu_session');
+      window.location.href = '../Client Side/iniciarsesion.html';
+    }
+  });
+
+  // Refresh
+  btnRefresh.addEventListener('click', () => renderList());
+
+  // Filters listeners
+  [searchInput, sortBy, filterCategory].forEach(el => el.addEventListener('input', renderList));
+
+  // storage listener (sync across tabs)
+  window.addEventListener('storage', (e) => {
+    if(e.key === PRODUCTS_KEY) renderList();
+  });
+
+  // initialize seed if no products (light)
+  (function seedIfEmpty(){
+    const arr = getProducts();
+    if(!arr || arr.length === 0){
+      // try to load seed_products.js if exists or create a minimal seed
+      const demo = [
+        { id: '1001', name:'Jarra Cerámica', desc:'Jarra de prueba', category:'Ceramica-Alfareria', stock:10, price:80, image:'../assets/img/placeholder.png', artisan:'Taller Ruiz', sold: 3 },
+        { id: '1002', name:'Manta Tejida', desc:'Manta de prueba', category:'Textiles', stock:5, price:120, image:'../assets/img/placeholder.png', artisan:'Maria Textiles', sold: 1 }
+      ];
+      saveProducts(demo);
+    }
+  })();
+
+  // initial render
+  renderList();
+
+  // keyboard accessibility: close modal on click outside
+  prodModal.addEventListener('click', (e) => {
+    if(e.target === prodModal) prodModal.style.display = 'none';
+  });
+
+  // make Enter save when modal open
+  prodForm.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && e.target.tagName !== 'TEXTAREA'){ e.preventDefault(); prodForm.requestSubmit(); }
+  });
+</script>
+</body>
+</html>

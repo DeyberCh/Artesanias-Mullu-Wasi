@@ -1,26 +1,10 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/404", "destination": "/404.html" },
-    { "source": "/about", "destination": "/about.html" },
-    { "source": "/account", "destination": "/account.html" },
-    { "source": "/cart", "destination": "/cart.html" },
-    { "source": "/category", "destination": "/category.html" },
-    { "source": "/checkout", "destination": "/checkout.html" },
-    { "source": "/contact", "destination": "/contact.html" },
-    { "source": "/faq", "destination": "/faq.html" },
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/order-confirmation", "destination": "/order-confirmation.html" },
-    { "source": "/payment-methods", "destination": "/payment-methods.html" },
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/product-details", "destination": "/product-details.html" },
-    { "source": "/register", "destination": "/register.html" },
-    { "source": "/return-policy", "destination": "/return-policy.html" },
-    { "source": "/search-results", "destination": "/search-results.html" },
-    { "source": "/shiping-info", "destination": "/shiping-info.html" },
-    { "source": "/starter-page", "destination": "/starter-page.html" },
-    { "source": "/support", "destination": "/support.html" },
-    { "source": "/tos", "destination": "/tos.html" }
-  ],
-  "cleanUrls": true
-}
+    "rewrites": [
+      { "source": "/", "destination": "/index.html" },
+      { "source": "/tv", "destination": "/tv.html" },
+      { "source": "/movies", "destination": "/peliculas.html" },
+      { "source": "/futbol", "destination": "/futbol.html" },
+      { "source": "/about", "destination": "/acercade.html" }
+    ],
+    "cleanUrls": true
+  }

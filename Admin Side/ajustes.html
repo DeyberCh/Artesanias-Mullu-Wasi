@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ajustes - Admin | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(247,250,248); --muted:#2f5f57; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; padding:.8rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; position:sticky; top:0; z-index:60; }
+    .brand{ font-weight:800; letter-spacing:.6px }
+    .container{ max-width:980px; margin:1rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    h1{ margin:0 0 .6rem 0; color:var(--accent) }
+    .grid{ display:grid; grid-template-columns: 260px 1fr; gap:1rem; align-items:start; }
+    .avatar-wrap{ display:flex; flex-direction:column; align-items:center; gap:.6rem; padding:1rem; }
+    .avatar{ width:160px; height:160px; border-radius:12px; overflow:hidden; background:#f4f7f5; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(2,20,18,0.04) }
+    .avatar img{ width:100%; height:100%; object-fit:cover }
+    .btn{ padding:.55rem .75rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    form{ display:flex; flex-direction:column; gap:.6rem; }
+    label{ font-weight:700; color:#174b43; margin-top:.4rem }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="password"]{ padding:.55rem .6rem; border-radius:8px; border:1px solid #e2ece7; width:100%; }
+    .section{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 6px 20px rgba(2,20,18,0.04); }
+    .small{ font-size:.9rem; color:var(--muted) }
+    .success{ color: #155724; background:#e9f7ef; padding:.6rem; border-radius:8px; display:none; }
+    .error{ color:#7a2323; background:#ffecec; padding:.6rem; border-radius:8px; display:none; }
+    .row{ display:flex; gap:.6rem; }
+    @media(max-width:900px){ .grid{ grid-template-columns: 1fr } .avatar{ width:120px; height:120px } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Mullu Wasi — Ajustes</div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <a href="dashboard.html" class="btn btn-ghost">Dashboard</a>
+      <button id="btnLogout" class="btn btn-primary">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h1>Ajustes de perfil</h1>
+      <p class="small">Edita la información del administrador y cambia la contraseña desde aquí.</p>
+
+      <div class="grid" style="margin-top:.8rem">
+        <!-- left: avatar + upload -->
+        <aside class="section avatar-wrap">
+          <div class="avatar" id="avatarBox">
+            <img id="avatarImg" src="../assets/img/placeholder.png" alt="Avatar">
+          </div>
+          <div style="display:flex;gap:.5rem">
+            <label for="avatarInput" class="btn btn-ghost" style="cursor:pointer">Subir foto</label>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none">
+            <button id="removeAvatar" class="btn btn-ghost">Eliminar</button>
+          </div>
+          <div class="small">Icono de cámara para cambiar la foto de perfil.</div>
+        </aside>
+
+        <!-- right: forms -->
+        <section>
+          <div class="section">
+            <h3 style="margin:0 0 .6rem 0">Información personal</h3>
+            <form id="profileForm">
+              <label for="name">Nombre completo</label>
+              <input id="name" type="text" required>
+
+              <label for="taller">Taller / Organización</label>
+              <input id="taller" type="text">
+
+              <div class="row">
+                <div style="flex:1">
+                  <label for="phone">Teléfono</label>
+                  <input id="phone" type="tel">
+                </div>
+                <div style="width:320px">
+                  <label for="email">Correo electrónico</label>
+                  <input id="email" type="email" required>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:.6rem; margin-top:.6rem">
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                <button type="button" id="btnResetProfile" class="btn btn-ghost">Restablecer</button>
+              </div>
+
+              <div id="profileMsg" class="success" role="status">Guardado correctamente.</div>
+            </form>
+          </div>
+
+          <div class="section" style="margin-top:.8rem">
+            <h3 style="margin:0 0 .6rem 0">Cambiar contraseña</h3>
+            <form id="pwdForm">
+              <label for="oldPwd">Contraseña actual</label>
+              <input id="oldPwd" type="password">
+
+              <label for="newPwd">Nueva contraseña</label>
+              <input id="newPwd" type="password" placeholder="Mín. 8 caracteres, mezcla de letras y números">
+
+              <label for="confirmPwd">Confirmar nueva contraseña</label>
+              <input id="confirmPwd" type="password">
+
+              <div style="display:flex; gap:.6rem; margin-top:.6rem">
+                <button type="submit" class="btn btn-primary">Cambiar contraseña</button>
+                <button type="button" id="btnClearPwd" class="btn btn-ghost">Limpiar</button>
+              </div>
+
+              <div id="pwdMsgSuccess" class="success">Contraseña cambiada correctamente.</div>
+              <div id="pwdMsgError" class="error">Error cambiando la contraseña.</div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // Protección: requiere sesión admin
+  const SESSION_KEY = 'mullu_session';
+  const USERS_KEY = 'mullu_users'; // donde guardamos usuarios (incl admin)
+  const ADMIN_PROFILE_KEY = 'mullu_admin_profile';
+
+  const session = (function(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } })();
+  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = '../Client Side/iniciarsesion.html'; }
+
+  // DOM
+  const avatarInput = document.getElementById('avatarInput');
+  const avatarImg = document.getElementById('avatarImg');
+  const removeAvatar = document.getElementById('removeAvatar');
+  const profileForm = document.getElementById('profileForm');
+  const nameEl = document.getElementById('name');
+  const tallerEl = document.getElementById('taller');
+  const phoneEl = document.getElementById('phone');
+  const emailEl = document.getElementById('email');
+  const profileMsg = document.getElementById('profileMsg');
+  const btnResetProfile = document.getElementById('btnResetProfile');
+
+  const pwdForm = document.getElementById('pwdForm');
+  const oldPwd = document.getElementById('oldPwd');
+  const newPwd = document.getElementById('newPwd');
+  const confirmPwd = document.getElementById('confirmPwd');
+  const pwdMsgSuccess = document.getElementById('pwdMsgSuccess');
+  const pwdMsgError = document.getElementById('pwdMsgError');
+
+  const btnLogout = document.getElementById('btnLogout');
+
+  // Helpers
+  function getUsers(){ try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; } }
+  function saveUsers(arr){ localStorage.setItem(USERS_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+  function saveAdminProfile(obj){ localStorage.setItem(ADMIN_PROFILE_KEY, JSON.stringify(obj)); window.dispatchEvent(new Event('storage')); }
+  function getAdminProfile(){ try { return JSON.parse(localStorage.getItem(ADMIN_PROFILE_KEY) || 'null'); } catch(e){ return null; } }
+
+  // Init: cargar datos (preferir admin profile si existe)
+  (function loadProfile(){
+    const profile = getAdminProfile();
+    if(profile){
+      avatarImg.src = profile.avatar || '../assets/img/placeholder.png';
+      nameEl.value = profile.name || session.name || '';
+      tallerEl.value = profile.taller || '';
+      phoneEl.value = profile.phone || '';
+      emailEl.value = profile.email || session.email || '';
+    } else {
+      // intentar cargar desde usuarios por email
+      const users = getUsers();
+      const u = users.find(x => (x.email||'').toLowerCase() === (session.email||'').toLowerCase());
+      if(u){
+        avatarImg.src = u.avatar || '../assets/img/placeholder.png';
+        nameEl.value = u.nombre || session.name || '';
+        tallerEl.value = u.taller || '';
+        phoneEl.value = u.phone || '';
+        emailEl.value = u.email || session.email || '';
+      } else {
+        // defaults
+        avatarImg.src = '../assets/img/placeholder.png';
+        nameEl.value = session.name || '';
+        tallerEl.value = '';
+        phoneEl.value = '';
+        emailEl.value = session.email || '';
+      }
+    }
+  })();
+
+  // Avatar upload & preview (store as data URL)
+  avatarInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    if(!f.type.startsWith('image/')){ alert('Selecciona una imagen válida.'); return; }
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      avatarImg.src = ev.target.result;
+      // guardar perfil inmediatamente en memoria
+      const prof = getAdminProfile() || {};
+      prof.avatar = ev.target.result;
+      saveAdminProfile(prof);
+    };
+    reader.readAsDataURL(f);
+  });
+
+  removeAvatar.addEventListener('click', () => {
+    if(!confirm('Eliminar la foto de perfil?')) return;
+    avatarImg.src = '../assets/img/placeholder.png';
+    const prof = getAdminProfile() || {};
+    delete prof.avatar;
+    saveAdminProfile(prof);
+  });
+
+  // Guardar perfil
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = nameEl.value.trim();
+    const taller = tallerEl.value.trim();
+    const phone = phoneEl.value.trim();
+    const email = emailEl.value.trim();
+
+    if(!name || !email){ alert('Nombre y correo son requeridos'); return; }
+
+    // actualizar users list if admin exists there
+    const users = getUsers();
+    const idx = users.findIndex(u => (u.email||'').toLowerCase() === (session.email||'').toLowerCase());
+    if(idx >= 0){
+      users[idx].nombre = name;
+      users[idx].taller = taller;
+      users[idx].phone = phone;
+      users[idx].email = email;
+      users[idx].avatar = avatarImg.src;
+      saveUsers(users);
+    } else {
+      // si no existe, opcionalmente crear un registro usuario
+      users.push({ nombre: name, email, taller, phone, avatar: avatarImg.src });
+      saveUsers(users);
+    }
+
+    // guardar admin profile por separado
+    const prof = getAdminProfile() || {};
+    prof.name = name;
+    prof.taller = taller;
+    prof.phone = phone;
+    prof.email = email;
+    prof.avatar = avatarImg.src;
+    saveAdminProfile(prof);
+
+    // actualizar session email/name si cambió
+    const sess = session || {};
+    sess.email = email;
+    sess.name = name;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sess));
+
+    profileMsg.style.display = 'block';
+    setTimeout(()=> profileMsg.style.display = 'none', 2500);
+  });
+
+  btnResetProfile.addEventListener('click', () => {
+    if(confirm('Restablecer datos del formulario al último guardado?')){
+      loadProfile();
+    }
+  });
+
+  // Change password
+  // Note: since this demo stores users in localStorage, we will try to change the password in 'usuarios' record if exists.
+  pwdForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    pwdMsgError.style.display = 'none';
+    pwdMsgSuccess.style.display = 'none';
+
+    const oldv = oldPwd.value || '';
+    const newv = newPwd.value || '';
+    const conf = confirmPwd.value || '';
+
+    if(newv.length < 8){ pwdMsgError.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.'; pwdMsgError.style.display = 'block'; return; }
+    if(newv !== conf){ pwdMsgError.textContent = 'La confirmación no coincide.'; pwdMsgError.style.display = 'block'; return; }
+
+    // find user record in usuarios list
+    const users = getUsers();
+    const idx = users.findIndex(u => (u.email||'').toLowerCase() === (session.email||'').toLowerCase());
+    if(idx >= 0){
+      // if old password exists in record, verify; otherwise skip verification for demo
+      if(users[idx].password){
+        if(users[idx].password !== oldv){
+          pwdMsgError.textContent = 'Contraseña actual incorrecta.';
+          pwdMsgError.style.display = 'block';
+          return;
+        }
+      }
+      // set new password
+      users[idx].password = newv;
+      saveUsers(users);
+      pwdMsgSuccess.style.display = 'block';
+      setTimeout(()=> pwdMsgSuccess.style.display = 'none', 3000);
+      pwdForm.reset();
+      return;
+    }
+
+    // If user record not found, try create or store password in admin profile (demo)
+    const prof = getAdminProfile() || {};
+    // if prof.password exists, verify
+    if(prof.password){
+      if(prof.password !== oldv){
+        pwdMsgError.textContent = 'Contraseña actual incorrecta.';
+        pwdMsgError.style.display = 'block';
+        return;
+      }
+    }
+    prof.password = newv;
+    saveAdminProfile(prof);
+    pwdMsgSuccess.style.display = 'block';
+    setTimeout(()=> pwdMsgSuccess.style.display = 'none', 3000);
+    pwdForm.reset();
+  });
+
+  // Logout button
+  btnLogout.addEventListener('click', () => {
+    if(confirm('Cerrar sesión?')){
+      localStorage.removeItem(SESSION_KEY);
+      window.location.href = 'dashboard.html';
+    }
+  });
+
+  // react to external storage changes
+  window.addEventListener('storage', (e) => {
+    if(e.key === ADMIN_PROFILE_KEY || e.key === USERS_KEY){
+      // recargar perfil
+      const p = getAdminProfile();
+      if(p){
+        avatarImg.src = p.avatar || '../assets/img/placeholder.png';
+        nameEl.value = p.name || '';
+        tallerEl.value = p.taller || '';
+        phoneEl.value = p.phone || '';
+        emailEl.value = p.email || '';
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Perfil - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    .container{ max-width:980px; margin:1.2rem auto; padding:1rem; }
+    .card{ background:#fff; border-radius:12px; padding:1rem; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    .grid{ display:grid; grid-template-columns: 260px 1fr; gap:1rem; align-items:start; }
+    .avatar-wrap{ display:flex; flex-direction:column; align-items:center; gap:.6rem; padding:1rem; text-align:center; }
+    .avatar{
+      width:160px; height:160px; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(180deg, #f4f7f5, #eef4f2);
+      border:2px solid rgba(4,68,62,0.08);
+      box-shadow:0 6px 18px rgba(4,68,62,0.06);
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .camera-btn{ display:inline-flex; gap:.4rem; align-items:center; justify-content:center; padding:.5rem .6rem; border-radius:8px; background:var(--accent); color:#fff; border:none; cursor:pointer; font-weight:600; }
+    .camera-input{ display:none; }
+    h1{ margin:0 0 .4rem 0; color:var(--accent); font-size:1.25rem; }
+    .meta{ color:#375d57; font-size:.95rem; margin-bottom:.6rem; }
+    form .row{ display:flex; gap:.6rem; }
+    label{ display:block; font-size:.9rem; color:#213b36; margin-top:.6rem; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, textarea{
+      width:100%; padding:.55rem .7rem; border-radius:8px; border:1px solid #d7e0dc; margin-top:.35rem; font-size:.95rem;
+    }
+    .actions{ display:flex; gap:.6rem; margin-top:1rem; }
+    .btn{ padding:.6rem .9rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    .section-title{ font-weight:700; color:var(--accent); margin-bottom:.4rem; }
+    .change-pass{ margin-top:1rem; border-top:1px dashed #e4ede8; padding-top:1rem; }
+    .note{ color:#476f69; font-size:.9rem; margin-top:.5rem; }
+    .success{ background:#e9f7ef; border:1px solid #cfead6; padding:.5rem; border-radius:8px; color:#135e34; display:none; margin-top:.6rem; }
+    .error{ background:#ffecec; border:1px solid #f2c6c6; padding:.5rem; border-radius:8px; color:#7a2323; display:none; margin-top:.6rem; }
+    @media(max-width:880px){
+      .grid{ grid-template-columns:1fr; }
+      .avatar{ width:140px; height:140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="profileCard">
+      <div class="grid">
+        <aside class="avatar-wrap">
+          <div class="avatar" id="avatarBox" title="Foto de perfil">
+            <!-- Imagen inyectada por JS -->
+            <img id="avatarImg" src="../assets/img/placeholder.png" alt="Avatar" onerror="this.src='../assets/img/placeholder.png'">
+          </div>
+
+          <div>
+            <label class="camera-btn" for="avatarInput">📷 Cambiar foto</label>
+            <input id="avatarInput" class="camera-input" type="file" accept="image/*">
+          </div>
+
+          <div class="meta" id="metaEmail">usuario@ejemplo.com</div>
+
+          <div style="display:flex;gap:.5rem">
+            <button id="btnHistorial" class="btn btn-ghost">Historial</button>
+            <button id="btnLogout" class="btn btn-ghost">Cerrar sesión</button>
+          </div>
+        </aside>
+
+        <main>
+          <h1>Perfil</h1>
+          <div class="note">Aquí puedes editar tu información personal y cambiar tu contraseña.</div>
+
+          <form id="profileForm" novalidate>
+            <div style="display:flex;gap:.8rem;">
+              <div style="flex:1">
+                <label for="fullname">Nombre de usuario</label>
+                <input id="fullname" type="text" required>
+              </div>
+              <div style="width:180px;">
+                <label for="phone">Teléfono</label>
+                <input id="phone" type="tel" placeholder="+51 9xxxxxxxx" />
+              </div>
+            </div>
+
+            <label for="emailField">Email</label>
+            <input id="emailField" type="email" disabled>
+
+            <div style="display:flex;gap:.8rem;">
+              <div style="flex:1">
+                <label for="birth">Fecha de nacimiento</label>
+                <input id="birth" type="date">
+              </div>
+              <div style="width:180px;">
+                <label for="gender">Género</label>
+                <select id="gender">
+                  <option value="">Prefiero no decir</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <label for="taller">Taller / Taller de trabajo (opcional)</label>
+            <input id="taller" type="text" placeholder="Nombre del taller o emprendimiento">
+
+            <div class="actions">
+              <button type="button" id="saveProfile" class="btn btn-primary">Guardar cambios</button>
+              <button type="button" id="cancelEdit" class="btn btn-ghost">Cancelar</button>
+            </div>
+
+            <div class="success" id="successMsg">Guardado.</div>
+            <div class="error" id="errorMsg">Error.</div>
+
+            <div class="change-pass">
+              <h3 class="section-title">Cambiar contraseña</h3>
+              <label for="currentPass">Contraseña actual</label>
+              <input id="currentPass" type="password" placeholder="Contraseña actual">
+
+              <label for="newPass">Nueva contraseña</label>
+              <input id="newPass" type="password" placeholder="Nueva contraseña">
+
+              <label for="newPass2">Confirmar nueva contraseña</label>
+              <input id="newPass2" type="password" placeholder="Repite la nueva contraseña">
+
+              <div class="note">La contraseña debe tener al menos 8 caracteres, una letra, un número y un símbolo.</div>
+
+              <div style="display:flex;gap:.6rem;margin-top:.6rem">
+                <button type="button" id="changePassBtn" class="btn btn-primary">Actualizar contraseña</button>
+                <button type="button" id="clearPassFields" class="btn btn-ghost">Limpiar</button>
+              </div>
+
+              <div class="success" id="passSuccess" style="display:none">Contraseña actualizada.</div>
+              <div class="error" id="passError" style="display:none">Error al actualizar contraseña.</div>
+            </div>
+          </form>
+
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Perfil: lectura y edición de usuario desde localStorage (mullu_users) y sesión local (mullu_session)
+    const SESSION_KEY = 'mullu_session';
+    const USERS_KEY = 'mullu_users';
+
+    // Elementos
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarImg = document.getElementById('avatarImg');
+    const avatarBox = document.getElementById('avatarBox');
+    const metaEmail = document.getElementById('metaEmail');
+    const btnLogout = document.getElementById('btnLogout');
+    const btnHistorial = document.getElementById('btnHistorial');
+
+    const fullnameEl = document.getElementById('fullname');
+    const phoneEl = document.getElementById('phone');
+    const emailField = document.getElementById('emailField');
+    const birthEl = document.getElementById('birth');
+    const genderEl = document.getElementById('gender');
+    const tallerEl = document.getElementById('taller');
+
+    const saveProfileBtn = document.getElementById('saveProfile');
+    const cancelEditBtn = document.getElementById('cancelEdit');
+    const successMsg = document.getElementById('successMsg');
+    const errorMsg = document.getElementById('errorMsg');
+
+    const currentPassEl = document.getElementById('currentPass');
+    const newPassEl = document.getElementById('newPass');
+    const newPass2El = document.getElementById('newPass2');
+    const changePassBtn = document.getElementById('changePassBtn');
+    const clearPassFields = document.getElementById('clearPassFields');
+    const passSuccess = document.getElementById('passSuccess');
+    const passError = document.getElementById('passError');
+
+    // Helpers storage
+    function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
+    function getUsers(){ try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; } }
+    function saveUsers(arr){ localStorage.setItem(USERS_KEY, JSON.stringify(arr)); }
+
+    // Validación password (igual a registro)
+    function validarPassword(p){
+      if(!p || p.length < 8) return {ok:false, msg:'La contraseña debe tener al menos 8 caracteres.'};
+      if(!/[A-Za-z]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos una letra.'};
+      if(!/[0-9]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos un número.'};
+      if(!/[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?¡¿~`ºª]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos un símbolo.'};
+      return {ok:true};
+    }
+
+    // Protege la página: require session
+    const session = getSession();
+    if(!session || !session.email){
+      // no hay sesión -> redirigir
+      alert('Acceso no autorizado. Inicia sesión para ver tu perfil.');
+      window.location.href = 'iniciarsesion.html';
+    }
+
+    // obtener usuario actual de localStorage (por email)
+    let users = getUsers();
+    let currentUser = users.find(u => (u.email||'').toLowerCase() === (session.email||'').toLowerCase());
+
+    // Si la sesión es de admin (lista de admins no guardada en mullu_users),
+    // podemos permitir mostrar algunos datos básicos tomados de la sesión.
+    if(!currentUser){
+      // crear user temporal desde session info (no se persistirán cambios en contraseña)
+      currentUser = {
+        id: Date.now(),
+        fullname: session.name || session.email,
+        email: session.email,
+        phone: '',
+        birth: '',
+        gender: '',
+        taller: '',
+        avatar: ''
+      };
+      // Nota: si quieres persistir cambios para admins debes almacenar en mullu_users.
+    }
+
+    // Render inicial
+    function renderProfile(){
+      avatarImg.src = currentUser.avatar || '../assets/img/placeholder.png';
+      metaEmail.textContent = currentUser.email || session.email;
+      fullnameEl.value = currentUser.fullname || '';
+      phoneEl.value = currentUser.phone || '';
+      emailField.value = currentUser.email || '';
+      birthEl.value = currentUser.birth ? currentUser.birth.split('T')[0] : (currentUser.birth || '');
+      genderEl.value = currentUser.gender || '';
+      tallerEl.value = currentUser.taller || '';
+    }
+    renderProfile();
+
+    // Subir avatar y guardar en currentUser (base64)
+    avatarInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      const allowed = ['image/jpeg','image/png','image/webp'];
+      if(!allowed.includes(file.type)){
+        alert('Formato no soportado. Usa JPG, PNG o WEBP.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const base64 = ev.target.result;
+        avatarImg.src = base64;
+        currentUser.avatar = base64;
+        // si el usuario está en mullu_users persistir
+        const idx = users.findIndex(u => (u.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
+        if(idx >= 0){
+          users[idx].avatar = base64;
+          saveUsers(users);
+        }
+        showTempSuccess('Foto guardada.');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Guardar perfil
+    saveProfileBtn.addEventListener('click', () => {
+      const fullname = (fullnameEl.value || '').trim();
+      const phone = (phoneEl.value || '').trim();
+      const birth = (birthEl.value || '').trim();
+      const gender = (genderEl.value || '').trim();
+      const taller = (tallerEl.value || '').trim();
+
+      if(!fullname){ showTempError('Ingresa tu nombre.'); return; }
+      // actualizar objeto
+      currentUser.fullname = fullname;
+      currentUser.phone = phone;
+      currentUser.birth = birth;
+      currentUser.gender = gender;
+      currentUser.taller = taller;
+
+      // persistir si existe en users
+      const idx = users.findIndex(u => (u.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
+      if(idx >= 0){
+        users[idx] = { ...users[idx], ...currentUser };
+        saveUsers(users);
+        showTempSuccess('Perfil actualizado.');
+      } else {
+        // Si no existe en users (ej: admin temporal), opcionalmente no persistimos
+        showTempSuccess('Perfil actualizado (no persistido en admin local).');
+      }
+      renderProfile();
+    });
+
+    cancelEditBtn.addEventListener('click', () => { renderProfile(); });
+
+    // Cambiar contraseña
+    changePassBtn.addEventListener('click', () => {
+      passSuccess.style.display = 'none';
+      passError.style.display = 'none';
+      const current = (currentPassEl.value || '');
+      const p1 = (newPassEl.value || '');
+      const p2 = (newPass2El.value || '');
+
+      // Si el usuario no está en users (p.ej. admin temporal) no podemos validar actual; sugerimos contactar o persistir admin.
+      const idx = users.findIndex(u => (u.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
+      if(idx < 0){
+        passError.style.display = 'block';
+        passError.textContent = 'No es posible cambiar la contraseña de este usuario desde aquí. Si eres administrador contacta al responsable.';
+        return;
+      }
+
+      if(!current || !p1 || !p2){ passError.style.display = 'block'; passError.textContent = 'Completa todos los campos de contraseña.'; return; }
+
+      // comprobar contraseña actual
+      if(users[idx].password !== current){
+        passError.style.display = 'block'; passError.textContent = 'Contraseña actual incorrecta.'; return;
+      }
+
+      if(p1 !== p2){ passError.style.display = 'block'; passError.textContent = 'Las nuevas contraseñas no coinciden.'; return; }
+
+      const chk = validarPassword(p1);
+      if(!chk.ok){ passError.style.display = 'block'; passError.textContent = chk.msg; return; }
+
+      // actualizar
+      users[idx].password = p1;
+      saveUsers(users);
+      passSuccess.style.display = 'block'; passSuccess.textContent = 'Contraseña cambiada correctamente.';
+      // limpiar campos
+      currentPassEl.value = ''; newPassEl.value = ''; newPass2El.value = '';
+      setTimeout(()=> passSuccess.style.display = 'none', 2500);
+    });
+
+    clearPassFields.addEventListener('click', () => {
+      currentPassEl.value = ''; newPassEl.value = ''; newPass2El.value = '';
+      passSuccess.style.display = 'none'; passError.style.display = 'none';
+    });
+
+    // Helpers mensajes
+    function showTempSuccess(text){
+      successMsg.style.display = 'block'; successMsg.textContent = text;
+      setTimeout(()=> successMsg.style.display = 'none', 2200);
+    }
+    function showTempError(text){
+      errorMsg.style.display = 'block'; errorMsg.textContent = text;
+      setTimeout(()=> errorMsg.style.display = 'none', 4200);
+    }
+
+    // Logout
+    btnLogout.addEventListener('click', () => {
+      if(confirm('¿Cerrar sesión?')) {
+        localStorage.removeItem(SESSION_KEY);
+        // optionally do not remove users
+        window.location.href = 'index.html';
+      }
+    });
+
+    // Historial
+    btnHistorial.addEventListener('click', () => {
+      window.location.href = 'historial.html';
+    });
+
+    // Render inicial
+    renderProfile();
+
+    // Guardar en caso de reload si currentUser cambió (no obligatorio)
+    window.addEventListener('beforeunload', () => {
+      const idx = users.findIndex(u => (u.email||'').toLowerCase() === (currentUser.email||'').toLowerCase());
+      if(idx >= 0){
+        users[idx] = { ...users[idx], ...currentUser };
+        saveUsers(users);
+      }
+    });
+  </script>
+</body>
+</html>

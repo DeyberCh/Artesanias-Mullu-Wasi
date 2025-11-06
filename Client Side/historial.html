@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Historial de Compras - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    .container{ max-width:1100px; margin:1rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    header.page-head{ display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; }
+    header.page-head h1{ color:var(--accent); margin:0; font-size:1.25rem; }
+    .controls{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
+    .controls input[type="text"], .controls input[type="date"], .controls select{ padding:.5rem .6rem; border-radius:8px; border:1px solid #d7e0dc; }
+    .btn{ padding:.55rem .75rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    table{ width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.95rem; }
+    th, td{ padding:.6rem .5rem; text-align:left; border-bottom:1px solid #eef3ef; }
+    th{ background:#f6faf8; color:#225047; position:sticky; top:0; z-index:2; }
+    .actions { display:flex; gap:.4rem; }
+    .small{ font-size:.85rem; color:#365f59; }
+    .empty{ padding:2rem; text-align:center; color:#567c74; }
+    /* Modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:40; }
+    .modal-card{ width:92%; max-width:700px; background:#fff; border-radius:10px; padding:1rem; box-shadow:0 12px 40px rgba(0,0,0,0.18); max-height:85vh; overflow:auto; }
+    .modal-header{ display:flex; justify-content:space-between; align-items:center; gap:.6rem; margin-bottom:.6rem; }
+    @media(max-width:820px){ .controls{ flex-direction:column; align-items:stretch } table th, table td{ font-size:.85rem } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header class="page-head">
+        <div>
+          <h1>Historial de Compras</h1>
+          <div class="small">Aquí verás las compras realizadas por los clientes</div>
+        </div>
+        <div class="controls" role="toolbar" aria-label="Controles del historial">
+          <input id="searchInput" type="text" placeholder="Buscar por producto, cliente, país..." />
+          <label class="small">Desde <input id="dateFrom" type="date"></label>
+          <label class="small">Hasta <input id="dateTo" type="date"></label>
+          <select id="countryFilter">
+            <option value="">Todos los países</option>
+          </select>
+          <button id="btnExport" class="btn btn-primary">Exportar CSV</button>
+          <button id="btnClear" class="btn btn-ghost">Limpiar historial</button>
+        </div>
+      </header>
+
+      <div id="tableWrap">
+        <table aria-live="polite">
+          <thead>
+            <tr>
+              <th>ID Compra</th>
+              <th>Cliente</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Total (S/)</th>
+              <th>Fecha</th>
+              <th>País</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTbody">
+            <!-- Filas generadas por JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="emptyMsg" class="empty" style="display:none">
+        No hay órdenes registradas. Las órdenes se almacenarán aquí cuando los clientes realicen pedidos.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal detalle -->
+  <div id="detailModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">Detalle de la orden</h3>
+        <div><button id="closeModal" class="btn btn-ghost">Cerrar</button></div>
+      </div>
+      <div id="modalBody">
+        <!-- contenido -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Protege la página: require sesión
+    const session = JSON.parse(localStorage.getItem('mullu_session') || 'null');
+    if(!session || !session.email){
+      alert('Acceso no autorizado. Inicia sesión para ver el historial.');
+      window.location.href = 'iniciarsesion.html';
+    }
+
+    // Claves en localStorage
+    const ORDERS_KEY = 'mullu_orders'; // array de órdenes
+    // cada orden: { id, customerName, customerEmail, items: [{productName, qty, price}], total, dateISO, country }
+
+    // Elementos
+    const tbody = document.getElementById('ordersTbody');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const searchInput = document.getElementById('searchInput');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    const countryFilter = document.getElementById('countryFilter');
+    const btnExport = document.getElementById('btnExport');
+    const btnClear = document.getElementById('btnClear');
+
+    const detailModal = document.getElementById('detailModal');
+    const modalBody = document.getElementById('modalBody');
+    const closeModal = document.getElementById('closeModal');
+
+    // Cargar o inicializar datos de ejemplo si no existen
+    function seedIfEmpty(){
+      const raw = localStorage.getItem(ORDERS_KEY);
+      if(!raw){
+        const sample = [
+          {
+            id: 'ORD-' + Date.now(),
+            customerName: 'María Santos',
+            customerEmail: 'mariasantos@example.com',
+            items: [{ productName: 'Jarra de cerámica', qty: 1, price: 80 }],
+            total: 80,
+            dateISO: new Date().toISOString(),
+            country: 'Perú'
+          },
+          {
+            id: 'ORD-' + (Date.now()+1),
+            customerName: 'Carlos Díaz',
+            customerEmail: 'carlos@example.com',
+            items: [{ productName: 'Manta tejida', qty: 2, price: 95 }],
+            total: 190,
+            dateISO: new Date(Date.now() - 86400000*3).toISOString(),
+            country: 'Ecuador'
+          }
+        ];
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(sample));
+      }
+    }
+
+    // Obtener órdenes
+    function getOrders(){
+      try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
+      catch(e){ return []; }
+    }
+    function saveOrders(arr){ localStorage.setItem(ORDERS_KEY, JSON.stringify(arr)); }
+
+    // Poblar filtro de países dinámicamente
+    function populateCountryFilter(orders){
+      const countries = Array.from(new Set(orders.map(o=>o.country).filter(Boolean)));
+      countryFilter.innerHTML = '<option value=\"\">Todos los países</option>' + countries.map(c=>`<option value="${c}">${c}</option>`).join('');
+    }
+
+    // Render de tabla según filtros
+    function renderTable(){
+      const all = getOrders().slice().sort((a,b)=> new Date(b.dateISO) - new Date(a.dateISO));
+      if(all.length === 0){
+        document.querySelector('#tableWrap').style.display = 'none';
+        emptyMsg.style.display = 'block';
+        return;
+      } else {
+        document.querySelector('#tableWrap').style.display = 'block';
+        emptyMsg.style.display = 'none';
+      }
+
+      populateCountryFilter(all);
+
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const from = dateFrom.value ? new Date(dateFrom.value) : null;
+      const to = dateTo.value ? new Date(dateTo.value) : null;
+      if(to) { to.setHours(23,59,59,999); }
+      const country = countryFilter.value;
+
+      const filtered = all.filter(o => {
+        if(country && o.country !== country) return false;
+        if(from && new Date(o.dateISO) < from) return false;
+        if(to && new Date(o.dateISO) > to) return false;
+        if(!q) return true;
+        // buscar en cliente, país, id, productos
+        if((o.customerName||'').toLowerCase().includes(q)) return true;
+        if((o.customerEmail||'').toLowerCase().includes(q)) return true;
+        if((o.id||'').toLowerCase().includes(q)) return true;
+        if((o.country||'').toLowerCase().includes(q)) return true;
+        // productos
+        if(Array.isArray(o.items) && o.items.some(i => (i.productName||'').toLowerCase().includes(q))) return true;
+        return false;
+      });
+
+      tbody.innerHTML = filtered.map(o => {
+        const firstProduct = (o.items && o.items.length>0) ? o.items[0].productName : '-';
+        const qtySum = (o.items||[]).reduce((s,i)=>s + (i.qty||0), 0);
+        return `<tr>
+          <td>${o.id}</td>
+          <td>${escapeHtml(o.customerName)}<div class="small">${escapeHtml(o.customerEmail || '')}</div></td>
+          <td>${escapeHtml(firstProduct)}</td>
+          <td>${qtySum}</td>
+          <td>${Number(o.total).toFixed(2)}</td>
+          <td>${formatDate(o.dateISO)}</td>
+          <td>${escapeHtml(o.country || '')}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost" data-action="view" data-id="${o.id}">Ver</button>
+            <button class="btn btn-ghost" data-action="del" data-id="${o.id}">Eliminar</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+
+      // attach events for view/delete
+      Array.from(document.querySelectorAll('button[data-action="view"]')).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.id; openDetail(id);
+      }));
+      Array.from(document.querySelectorAll('button[data-action="del"]')).forEach(b => b.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.id;
+        if(confirm('Eliminar esta orden? Esta acción no se puede deshacer.')){
+          deleteOrder(id);
+        }
+      }));
+    }
+
+    function formatDate(iso){
+      try { const d = new Date(iso); return d.toLocaleString(); } catch(e){ return iso; }
+    }
+
+    function escapeHtml(text){
+      if(!text) return '';
+      return String(text).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; });
+    }
+
+    // detalle modal
+    function openDetail(id){
+      const orders = getOrders();
+      const o = orders.find(x => x.id === id);
+      if(!o) return alert('Orden no encontrada.');
+      modalBody.innerHTML = renderOrderDetail(o);
+      detailModal.style.display = 'flex';
+    }
+    function renderOrderDetail(o){
+      const itemsHtml = (o.items||[]).map(it => `<tr><td>${escapeHtml(it.productName)}</td><td>${it.qty}</td><td>S/ ${Number(it.price).toFixed(2)}</td><td>S/ ${(it.qty * it.price).toFixed(2)}</td></tr>`).join('');
+      return `
+        <div>
+          <strong>ID:</strong> ${o.id}<br>
+          <strong>Cliente:</strong> ${escapeHtml(o.customerName)} (${escapeHtml(o.customerEmail)})<br>
+          <strong>País:</strong> ${escapeHtml(o.country)}<br>
+          <strong>Fecha:</strong> ${formatDate(o.dateISO)}<br>
+          <hr>
+          <h4>Items</h4>
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="background:#f6faf8"><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead>
+            <tbody>${itemsHtml}</tbody>
+          </table>
+          <div style="text-align:right;margin-top:.6rem"><strong>Total: S/ ${Number(o.total).toFixed(2)}</strong></div>
+        </div>
+      `;
+    }
+    closeModal.addEventListener('click', ()=> detailModal.style.display = 'none');
+    detailModal.addEventListener('click', (e)=> { if(e.target === detailModal) detailModal.style.display = 'none'; });
+
+    // borrar orden
+    function deleteOrder(id){
+      const arr = getOrders().filter(o => o.id !== id);
+      saveOrders(arr);
+      renderTable();
+    }
+
+    // exportar CSV de las órdenes filtradas
+    function exportCSV(){
+      // tomar las filas actualmente visibles (aplicar mismo filtro)
+      const rows = Array.from(tbody.querySelectorAll('tr')).map(tr => {
+        const tds = tr.querySelectorAll('td');
+        return [
+          tds[0].innerText.trim(), // id
+          tds[1].innerText.split('\\n')[0].trim(), // cliente
+          tds[2].innerText.trim(), // producto
+          tds[3].innerText.trim(), // cantidad
+          tds[4].innerText.trim(), // total
+          tds[5].innerText.trim(), // fecha
+          tds[6].innerText.trim()  // pais
+        ];
+      });
+      if(rows.length === 0){ alert('No hay datos para exportar.'); return; }
+      const header = ['ID Compra','Cliente','Producto','Cantidad','Total (S/)','Fecha','País'];
+      const csv = [header, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'historial_ordenes.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // limpiar historial
+    btnClear.addEventListener('click', () => {
+      if(!confirm('¿Eliminar todo el historial de órdenes? Esta acción es irreversible.')) return;
+      localStorage.removeItem(ORDERS_KEY);
+      renderTable();
+    });
+
+    // listeners filtros
+    [searchInput, dateFrom, dateTo, countryFilter].forEach(el => el.addEventListener('input', renderTable));
+    btnExport.addEventListener('click', exportCSV);
+
+    // helper: if no orders, seed
+    seedIfEmpty();
+
+    // inicial
+    renderTable();
+
+    // utility: observe storage changes (otra pestaña) y re-render
+    window.addEventListener('storage', (e) => {
+      if(e.key === ORDERS_KEY) renderTable();
+    });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard - Admin | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(247,250,248); --muted:#2f5f57; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; padding:.9rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; position:sticky; top:0; z-index:60; }
+    .brand{ font-weight:800; letter-spacing:.6px }
+    .admin-actions{ display:flex; gap:.6rem; align-items:center }
+    .btn{ padding:.5rem .7rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(255,255,255,0.15); color:#fff }
+    .btn-danger{ background:#c94b4b; color:#fff }
+    .container{ max-width:1200px; margin:1rem auto; padding:1rem; }
+    .grid{ display:grid; grid-template-columns: 1fr 360px; gap:1rem; align-items:start; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    .row{ display:flex; gap:.6rem; align-items:center }
+    h1{ margin:0 0 .6rem 0; color:var(--accent) }
+    .stats{ display:flex; gap:.6rem; margin-bottom:.8rem; flex-wrap:wrap }
+    .stat{ background:linear-gradient(180deg,#f7fbfa,#f1f6f4); padding:.8rem 1rem; border-radius:10px; min-width:140px; box-shadow:0 6px 18px rgba(2,20,18,0.04) }
+    .stat h3{ margin:0; color:#123; font-size:1.05rem }
+    .stat p{ margin:.2rem 0 0 0; color:var(--muted); font-weight:700 }
+    /* sales table */
+    .controls{ display:flex; gap:.5rem; align-items:center; margin-bottom:.6rem; flex-wrap:wrap }
+    input[type="search"], input[type="date"], select{ padding:.45rem .6rem; border-radius:8px; border:1px solid #e2ece7; }
+    table{ width:100%; border-collapse:collapse; font-size:.92rem; margin-top:.6rem; }
+    th, td{ padding:.6rem .5rem; border-bottom:1px solid #eef3f0; text-align:left; vertical-align:middle }
+    th{ background:#f6faf8; color:#225047; position:sticky; top:0; z-index:2 }
+    .small{ font-size:.86rem; color:var(--muted) }
+    /* products panel */
+    .products-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:.6rem }
+    .products-list{ max-height:460px; overflow:auto; margin-top:.5rem }
+    .prod-row{ display:grid; grid-template-columns: 40px 1fr 90px 80px 110px; gap:.5rem; padding:.5rem; align-items:center; border-bottom:1px solid #f1f6f4 }
+    .prod-row .img{ width:40px;height:40px;border-radius:8px; background:#f4f7f5; display:flex;align-items:center;justify-content:center; overflow:hidden }
+    .prod-row img{ width:100%;height:100%; object-fit:cover }
+    .actions{ display:flex; gap:.4rem }
+    /* modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:80; }
+    .modal-card{ width:96%; max-width:760px; background:#fff; border-radius:12px; padding:1rem; box-shadow:0 18px 50px rgba(2,20,18,0.3); max-height:90vh; overflow:auto; }
+    label{ display:block; font-size:.9rem; color:#174b43; margin-top:.6rem }
+    input[type="text"], input[type="number"], textarea, select{ width:100%; padding:.5rem .6rem; border-radius:8px; border:1px solid #e0ebe6; }
+    textarea{ min-height:120px; }
+    .modal-footer{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:1rem }
+    .chart-wrap{ height:220px; }
+    @media(max-width:1000px){ .grid{ grid-template-columns:1fr } .products-list{ max-height:320px } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Mullu Wasi — Admin Dashboard</div>
+    <div class="admin-actions">
+      <button id="btnOpenClient" class="btn btn-ghost">Ver sitio cliente</button>
+      <button id="btnUsers" class="btn btn-ghost">Usuarios</button>
+      <button id="btnCategorias" class="btn btn-ghost">Categorías</button>
+      <button id="btnLogout" class="btn btn-danger">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Dashboard</h1>
+
+    <section class="card">
+      <div class="stats">
+        <div class="stat">
+          <h3 id="totalSalesS">S/ 0.00</h3>
+          <p>Ventas totales</p>
+        </div>
+        <div class="stat">
+          <h3 id="totalOrders">0</h3>
+          <p>Órdenes</p>
+        </div>
+        <div class="stat">
+          <h3 id="totalProducts">0</h3>
+          <p>Productos</p>
+        </div>
+        <div class="stat">
+          <h3 id="totalClients">0</h3>
+          <p>Usuarios registrados</p>
+        </div>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 1fr 380px; gap:1rem">
+        <!-- left: ventas -->
+        <div class="card" style="padding:0.8rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+            <div>
+              <strong>Resumen de ventas</strong>
+              <div class="small">Tabla de órdenes recientes</div>
+            </div>
+            <div class="controls">
+              <input id="searchOrders" type="search" placeholder="Buscar por cliente, producto o id" />
+              <input id="dateFrom" type="date" />
+              <input id="dateTo" type="date" />
+              <button id="btnExportOrders" class="btn">Exportar CSV</button>
+            </div>
+          </div>
+
+          <div style="max-height:360px; overflow:auto">
+            <table aria-live="polite">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Productos</th>
+                  <th>Cant.</th>
+                  <th>Total (S/)</th>
+                  <th>País</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTbody">
+                <!-- filas -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:.8rem" class="chart-wrap card" id="chartCard">
+            <canvas id="salesChart" style="width:100%;height:200px;"></canvas>
+          </div>
+        </div>
+
+        <!-- right: productos -->
+        <aside class="card">
+          <div class="products-head">
+            <div>
+              <strong>Productos</strong>
+              <div class="small">CRUD de productos (las acciones se reflejan en el panel cliente)</div>
+            </div>
+            <div class="row">
+              <input id="searchProducts" type="search" placeholder="Buscar producto..." />
+              <button id="btnNewProduct" class="btn">Nuevo producto</button>
+            </div>
+          </div>
+
+          <div class="products-list" id="productsList">
+            <!-- filas generadas -->
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: New/Edit Product -->
+  <div id="productModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Nuevo producto</h3>
+
+      <form id="productForm">
+        <input type="hidden" id="prodId" />
+        <label for="prodName">Nombre</label>
+        <input id="prodName" type="text" required />
+
+        <label for="prodDesc">Descripción</label>
+        <textarea id="prodDesc"></textarea>
+
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1">
+            <label for="prodCategory">Categoría</label>
+            <select id="prodCategory">
+              <option value="Ceramica-Alfareria">Ceramica-Alfareria</option>
+              <option value="Decoración">Decoración</option>
+              <option value="Fibras-Naturales">Fibras-Naturales</option>
+              <option value="Instrumentos">Instrumentos</option>
+              <option value="Joyería">Joyería</option>
+              <option value="Madera">Madera</option>
+              <option value="Textiles">Textiles</option>
+              <option value="Otros">Otros</option>
+            </select>
+          </div>
+          <div style="width:140px">
+            <label for="prodStock">Stock</label>
+            <input id="prodStock" type="number" min="0" value="0" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1">
+            <label for="prodPrice">Precio (S/)</label>
+            <input id="prodPrice" type="number" min="0" step="0.01" />
+          </div>
+          <div style="width:160px">
+            <label for="prodImage">Ruta imagen (assets)</label>
+            <input id="prodImage" type="text" placeholder="../assets/img/ejemplo.jpg" />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancelProd" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" id="btnSaveProd" class="btn btn-primary">Guardar producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  /*****************************************
+   * Admin Dashboard (client-side, localStorage)
+   *****************************************/
+  const SESSION_KEY = 'mullu_session';
+  const PRODUCTS_KEY = 'mullu_products';
+  const ORDERS_KEY = 'mullu_orders';
+  const USERS_KEY = 'mullu_users';
+
+  // check session admin
+  const session = (() => { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } })();
+  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = '../Client Side/iniciarsesion.html'; }
+
+  // DOM
+  const totalSalesS = document.getElementById('totalSalesS');
+  const totalOrders = document.getElementById('totalOrders');
+  const totalProducts = document.getElementById('totalProducts');
+  const totalClients = document.getElementById('totalClients');
+
+  const ordersTbody = document.getElementById('ordersTbody');
+  const searchOrders = document.getElementById('searchOrders');
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  const btnExportOrders = document.getElementById('btnExportOrders');
+
+  const productsList = document.getElementById('productsList');
+  const searchProducts = document.getElementById('searchProducts');
+  const btnNewProduct = document.getElementById('btnNewProduct');
+  const productModal = document.getElementById('productModal');
+  const productForm = document.getElementById('productForm');
+  const modalTitle = document.getElementById('modalTitle');
+  const prodId = document.getElementById('prodId');
+  const prodName = document.getElementById('prodName');
+  const prodDesc = document.getElementById('prodDesc');
+  const prodCategory = document.getElementById('prodCategory');
+  const prodStock = document.getElementById('prodStock');
+  const prodPrice = document.getElementById('prodPrice');
+  const prodImage = document.getElementById('prodImage');
+  const btnCancelProd = document.getElementById('btnCancelProd');
+
+  const btnLogout = document.getElementById('btnLogout');
+  const btnOpenClient = document.getElementById('btnOpenClient');
+  const btnUsers = document.getElementById('btnUsers');
+  const btnCategorias = document.getElementById('btnCategorias');
+
+  // chart
+  const salesChartCtx = document.getElementById('salesChart').getContext('2d');
+
+  // helpers localStorage
+  function getProducts(){ try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch(e){ return []; } }
+  function saveProducts(arr){ localStorage.setItem(PRODUCTS_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+  function getOrders(){ try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); } catch(e){ return []; } }
+  function getUsers(){ try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; } }
+
+  // render stats
+  function renderStats(){
+    const orders = getOrders();
+    const products = getProducts();
+    const users = getUsers();
+
+    const total = orders.reduce((s,o) => s + (Number(o.total) || 0), 0);
+    totalSalesS.textContent = 'S/ ' + total.toFixed(2);
+    totalOrders.textContent = orders.length;
+    totalProducts.textContent = products.length;
+    totalClients.textContent = users.length;
+  }
+
+  // Render orders table
+  function renderOrders(){
+    const all = getOrders().slice().sort((a,b)=> new Date(b.dateISO) - new Date(a.dateISO));
+    const q = (searchOrders.value || '').trim().toLowerCase();
+    const from = dateFrom.value ? new Date(dateFrom.value) : null;
+    const to = dateTo.value ? new Date(dateTo.value) : null;
+    if(to) to.setHours(23,59,59,999);
+
+    const filtered = all.filter(o => {
+      if(from && new Date(o.dateISO) < from) return false;
+      if(to && new Date(o.dateISO) > to) return false;
+      if(!q) return true;
+      if((o.customerName||'').toLowerCase().includes(q)) return true;
+      if((o.customerEmail||'').toLowerCase().includes(q)) return true;
+      if((o.id||'').toLowerCase().includes(q)) return true;
+      if((o.country||'').toLowerCase().includes(q)) return true;
+      if((o.items||[]).some(i => (i.productName||'').toLowerCase().includes(q))) return true;
+      return false;
+    });
+
+    ordersTbody.innerHTML = filtered.map(o => {
+      const qty = (o.items||[]).reduce((s,i) => s + (i.qty||0), 0);
+      const productNames = (o.items||[]).map(i => i.productName).join(', ');
+      return `<tr>
+        <td>${new Date(o.dateISO).toLocaleString()}</td>
+        <td>${escapeHtml(o.customerName)}<div class="small">${escapeHtml(o.customerEmail||'')}</div></td>
+        <td>${escapeHtml(productNames)}</td>
+        <td>${qty}</td>
+        <td>${Number(o.total).toFixed(2)}</td>
+        <td>${escapeHtml(o.country||'')}</td>
+      </tr>`;
+    }).join('');
+
+    renderSalesChart(all);
+  }
+
+  // Export orders CSV
+  btnExportOrders.addEventListener('click', () => {
+    const rows = Array.from(ordersTbody.querySelectorAll('tr')).map(tr => {
+      const tds = tr.querySelectorAll('td');
+      return [
+        tds[0].innerText.trim(),
+        tds[1].innerText.split('\\n')[0].trim(),
+        tds[2].innerText.trim(),
+        tds[3].innerText.trim(),
+        tds[4].innerText.trim(),
+        tds[5].innerText.trim()
+      ];
+    });
+    if(rows.length === 0){ alert('No hay órdenes para exportar.'); return; }
+    const header = ['Fecha','Cliente','Productos','Cantidad','Total','País'];
+    const csv = [header, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'ordenes_export.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  // products list render
+  function renderProductsList(){
+    const prods = getProducts().slice().sort((a,b) => Number(b.sold||0) - Number(a.sold||0));
+    const q = (searchProducts.value || '').trim().toLowerCase();
+    const filtered = q ? prods.filter(p => (p.name||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q)) : prods;
+
+    productsList.innerHTML = filtered.map(p => {
+      const img = p.image || '../assets/img/placeholder.png';
+      return `<div class="prod-row" data-id="${p.id}">
+        <div class="img"><img src="${img}" alt="${escapeHtml(p.name)}" onerror="this.src='../assets/img/placeholder.png'"></div>
+        <div>
+          <strong>${escapeHtml(p.name)}</strong>
+          <div class="small">${escapeHtml(p.desc||'')}</div>
+        </div>
+        <div class="small">S/ ${Number(p.price||0).toFixed(2)}</div>
+        <div class="small">Stock: ${p.stock!=null?p.stock:0}</div>
+        <div class="actions">
+          <button class="btn btn-ghost" data-action="edit" data-id="${p.id}">Editar</button>
+          <button class="btn btn-danger" data-action="del" data-id="${p.id}">Eliminar</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // attach events
+    Array.from(productsList.querySelectorAll('button[data-action="edit"]')).forEach(b => b.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id; openEditProduct(id);
+    }));
+    Array.from(productsList.querySelectorAll('button[data-action="del"]')).forEach(b => b.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      if(confirm('Eliminar este producto? Esta acción es irreversible.')){ deleteProduct(id); }
+    }));
+  }
+
+  // Open new product modal
+  btnNewProduct.addEventListener('click', () => openNewProduct());
+
+  function openNewProduct(){
+    prodId.value = '';
+    modalTitle.textContent = 'Nuevo producto';
+    prodName.value = '';
+    prodDesc.value = '';
+    prodCategory.value = 'Ceramica-Alfareria';
+    prodStock.value = 0;
+    prodPrice.value = 0;
+    prodImage.value = '';
+    productModal.style.display = 'flex';
+  }
+
+  function openEditProduct(id){
+    const prods = getProducts();
+    const p = prods.find(x => String(x.id) === String(id));
+    if(!p) return alert('Producto no encontrado');
+    prodId.value = p.id;
+    modalTitle.textContent = 'Editar producto';
+    prodName.value = p.name || '';
+    prodDesc.value = p.desc || '';
+    prodCategory.value = p.category || 'Otros';
+    prodStock.value = p.stock || 0;
+    prodPrice.value = p.price || 0;
+    prodImage.value = p.image || '';
+    productModal.style.display = 'flex';
+  }
+
+  // Save product (new or edit)
+  productForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const id = prodId.value || '';
+    const name = (prodName.value || '').trim();
+    const desc = (prodDesc.value || '').trim();
+    const category = prodCategory.value;
+    const stock = Number(prodStock.value || 0);
+    const price = Number(prodPrice.value || 0);
+    const image = prodImage.value || '../assets/img/placeholder.png';
+
+    if(!name){ alert('Nombre requerido'); return; }
+
+    const prods = getProducts();
+    if(id){
+      const idx = prods.findIndex(p => String(p.id) === String(id));
+      if(idx >= 0){
+        prods[idx] = { ...prods[idx], name, desc, category, stock, price, image };
+      } else {
+        alert('Producto no encontrado');
+        return;
+      }
+    } else {
+      const newId = String(Date.now());
+      prods.push({ id: newId, name, desc, category, stock, price, image, sold: 0, artisan: '' });
+    }
+    saveProducts(prods);
+    productModal.style.display = 'none';
+    renderProductsList();
+    renderStats();
+    alert('Producto guardado.');
+  });
+
+  btnCancelProd.addEventListener('click', () => { productModal.style.display = 'none'; });
+
+  // delete product
+  function deleteProduct(id){
+    let prods = getProducts();
+    prods = prods.filter(p => String(p.id) !== String(id));
+    saveProducts(prods);
+    renderProductsList();
+    renderStats();
+  }
+
+  // escape util
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // Sales chart: simple bar by day (sales total)
+  function renderSalesChart(orders){
+    // aggregate by date (YYYY-MM-DD)
+    const map = {};
+    orders.forEach(o => {
+      const d = new Date(o.dateISO);
+      const key = d.toISOString().slice(0,10);
+      map[key] = (map[key] || 0) + Number(o.total || 0);
+    });
+    // take last 10 days (sorted)
+    const keys = Object.keys(map).sort();
+    const lastKeys = keys.slice(-10);
+    const values = lastKeys.map(k => map[k]);
+
+    drawBarChart(salesChartCtx, lastKeys, values);
+  }
+
+  // draw bar chart (very light)
+  function drawBarChart(ctx, labels, values){
+    // clear
+    const canvas = ctx.canvas;
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(!labels || labels.length === 0){
+      // no data placeholder
+      ctx.fillStyle = '#cfe9e1';
+      ctx.font = `${14 * dpr}px sans-serif`;
+      ctx.fillText('No hay datos de ventas para graficar', 12 * dpr, 28 * dpr);
+      return;
+    }
+
+    // margins
+    const pad = 24 * dpr;
+    const left = pad;
+    const top = pad;
+    const right = canvas.width - pad;
+    const bottom = canvas.height - pad;
+
+    const maxVal = Math.max(...values, 1);
+    const barWidth = (right - left) / labels.length * 0.6;
+    labels.forEach((lab, i) => {
+      const xCenter = left + (i + 0.5) * ((right - left) / labels.length);
+      const barH = ((values[i] / maxVal) * (bottom - top)) || 0;
+      const x = xCenter - (barWidth/2);
+      const y = bottom - barH;
+      // bar
+      ctx.fillStyle = '#06715f';
+      ctx.fillRect(Math.round(x), Math.round(y), Math.round(barWidth), Math.round(barH));
+      // label
+      ctx.fillStyle = '#0f3e36';
+      ctx.font = `${12 * dpr}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(lab.slice(5), xCenter, bottom + 14 * dpr); // show MM-DD
+      // value
+      ctx.fillText(Number(values[i]).toFixed(0), xCenter, y - 6 * dpr);
+    });
+  }
+
+  // delete all orders? not implemented here (use historial page)
+
+  // listeners
+  [searchOrders, dateFrom, dateTo].forEach(el => el.addEventListener('input', renderOrders));
+  searchProducts.addEventListener('input', renderProductsList);
+
+  // logout
+  btnLogout.addEventListener('click', () => {
+    if(confirm('Cerrar sesión del administrador?')){
+      localStorage.removeItem(SESSION_KEY);
+      window.location.href = '../Client Side/iniciarsesion.html';
+    }
+  });
+
+  btnOpenClient.addEventListener('click', () => { window.open('../Client Side/index.html', '_blank'); });
+  btnUsers.addEventListener('click', () => { window.location.href = 'usuarios.html'; });
+  btnCategorias.addEventListener('click', () => { window.location.href = 'categorias-admin.html'; });
+
+  // react to storage updates
+  window.addEventListener('storage', (e) => {
+    if(e.key === ORDERS_KEY || e.key === PRODUCTS_KEY || e.key === USERS_KEY){
+      renderOrders(); renderProductsList(); renderStats();
+    }
+  });
+
+  // initial render
+  renderStats();
+  renderOrders();
+  renderProductsList();
+
+  // small utility: create demo orders if none (so chart has data)
+  (function seedOrdersIfEmpty(){
+    const orders = getOrders();
+    if(!orders || orders.length === 0){
+      // create a small demo order using products if available
+      const p = getProducts();
+      if(p && p.length>0){
+        const sampleOrder = {
+          id: 'ORD-' + Date.now(),
+          customerName: 'Cliente Demo',
+          customerEmail: 'cliente@example.com',
+          items: [{ productName: p[0].name, qty: 1, price: p[0].price }],
+          subtotal: Number(p[0].price || 0),
+          deliveryPrice: 10,
+          igv: (Number(p[0].price||0) * 0.18),
+          total: Number(p[0].price||0) + 10 + Number(p[0].price||0) * 0.18,
+          dateISO: new Date().toISOString(),
+          country: 'Perú'
+        };
+        const arr = [sampleOrder];
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(arr));
+        renderOrders(); renderStats();
+      }
+    }
+  })();
+
+</script>
+</body>
+</html>

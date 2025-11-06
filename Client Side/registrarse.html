@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registrarse - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    .wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+    .card{ width:420px; max-width:96%; background:#fff; border-radius:12px; padding:1.4rem; box-shadow:0 10px 30px rgba(2,20,18,0.06); }
+    .brand{ display:flex; gap:.6rem; align-items:center; margin-bottom:.6rem; }
+    .logo{ background:var(--accent); color:#fff; width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+    h2{ margin:0 0 .3rem 0; color:var(--accent); }
+    p.sub{ margin:.15rem 0 .8rem 0; color:#4b6a66; font-size:.95rem; }
+    label{ display:block; margin-top:.6rem; font-size:.9rem; color:#1d3b37; }
+    input[type="text"], input[type="email"], input[type="password"], select{ width:100%; padding:.6rem .75rem; margin-top:.35rem; border:1px solid #d7e0dc; border-radius:8px; font-size:.95rem; }
+    .row{ display:flex; gap:.6rem; }
+    .half{ flex:1; }
+    .btn{ margin-top:1rem; width:100%; padding:.65rem .9rem; border-radius:8px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; box-shadow:0 6px 16px rgba(4,68,62,0.08); }
+    .muted{ font-size:.88rem; color:#456b66; margin-top:.6rem; }
+    .error{ background:#ffecec; border:1px solid #f2c6c6; color:#7a2323; padding:.55rem; border-radius:8px; display:none; margin-top:.8rem; }
+    .success{ background:#e9f7ef; border:1px solid #cdebd1; color:#155724; padding:.55rem; border-radius:8px; display:none; margin-top:.8rem; }
+    .terms{ display:flex; gap:.5rem; align-items:center; margin-top:.6rem; font-size:.9rem; }
+    small.note{ display:block; margin-top:.6rem; color:#3b6a64; font-size:.86rem; }
+    @media(max-width:480px){ .card{ padding:1rem } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <form id="registerForm" class="card" autocomplete="off" novalidate>
+      <div class="brand">
+        <div class="logo">🌀</div>
+        <div>
+          <strong>Mullu Wasi</strong><br>
+          <small style="color:#4b6a66">Crea tu cuenta y empieza a comprar</small>
+        </div>
+      </div>
+
+      <h2>Crear cuenta</h2>
+      <p class="sub">Regístrate para apoyar la artesanía de Mollepampa y vender al mundo.</p>
+
+      <div id="msgError" class="error" role="alert"></div>
+      <div id="msgSuccess" class="success" role="status"></div>
+
+      <label for="fullname">Nombre completo</label>
+      <input id="fullname" type="text" placeholder="Tu nombre completo" required />
+
+      <label for="email">Email</label>
+      <input id="regEmail" type="email" placeholder="tucorreo@ejemplo.com" required />
+
+      <div class="row">
+        <div class="half">
+          <label for="regPassword">Contraseña</label>
+          <input id="regPassword" type="password" placeholder="Mínimo 8 caracteres" required />
+          <small class="muted">Debe contener letras, números y al menos un símbolo.</small>
+        </div>
+        <div class="half">
+          <label for="regPassword2">Confirmar contraseña</label>
+          <input id="regPassword2" type="password" placeholder="Repite la contraseña" required />
+        </div>
+      </div>
+
+      <label for="country">País</label>
+      <select id="country">
+        <option value="Perú">Perú</option>
+        <option value="Bolivia">Bolivia</option>
+        <option value="Ecuador">Ecuador</option>
+        <option value="Chile">Chile</option>
+        <option value="Argentina">Argentina</option>
+        <option value="Argentina">Colombia</option>
+        <option value="Argentina">Brazil</option>
+        <option value="Argentina">Mexico</option>
+        <option value="Argentina">EE.UU</option>
+        <option value="Argentina">Canada</option>
+        <option value="Argentina">Costa Rica</option>
+        <option value="Argentina">El Salvador</option>
+        <option value="Argentina">Paraguay</option>
+        <option value="Argentina">Uruguay</option>
+        <option value="Argentina">Guatemala</option>
+        <option value="Argentina">Panama</option>
+        <option value="Argentina">Venezuela</option>
+        <option value="Otros">Otros</option>
+      </select>
+
+      <label class="terms"><input id="terms" type="checkbox" /> <span>Acepto los <a href="terminosycondiciones.html" target="_blank">Términos de servicio</a> y la <a href="politicadeprivacidad.html" target="_blank">Política de privacidad</a></span></label>
+
+      <button type="submit" class="btn">Crear Cuenta</button>
+
+      <small class="note">¿Ya tienes cuenta? <a href="iniciarsesion.html" style="color:var(--accent);font-weight:700">Inicia sesión</a></small>
+    </form>
+  </div>
+
+  <script>
+    // Misma lista de admins (por si hay conflicto): crear no cambia su rol, todas las cuentas creadas aquí se guardan como client.
+    const ADMINS = [
+      'ruizcarhua@hotmail.com','carlosdilas@hotmail.com','stevesolon@hotmail.com','arianakenari@hotmail.com',
+      'anthonyceramica@hotmail.com','mariasantosminchan@hotmail.com','danielhuacha@hotmail.com','jorgejulcamoro@hotmail.com',
+      'marinolulayco@hotmail.com','teofilohuacha@hotmail.com'
+    ];
+
+    const form = document.getElementById('registerForm');
+    const fullnameEl = document.getElementById('fullname');
+    const emailEl = document.getElementById('regEmail');
+    const passEl = document.getElementById('regPassword');
+    const pass2El = document.getElementById('regPassword2');
+    const countryEl = document.getElementById('country');
+    const termsEl = document.getElementById('terms');
+
+    const msgError = document.getElementById('msgError');
+    const msgSuccess = document.getElementById('msgSuccess');
+
+    // Prefill si viene desde login (sessionStorage)
+    document.addEventListener('DOMContentLoaded', () => {
+      const pre = sessionStorage.getItem('prefill_email');
+      if(pre){ emailEl.value = pre; sessionStorage.removeItem('prefill_email'); }
+    });
+
+    // Helper: obtener usuarios desde localStorage
+    function getLocalUsers(){
+      try { return JSON.parse(localStorage.getItem('mullu_users') || '[]'); }
+      catch(e){ return []; }
+    }
+    function saveLocalUsers(arr){ localStorage.setItem('mullu_users', JSON.stringify(arr)); }
+
+    // Validación de contraseña: min 8, al menos una letra, un número y un símbolo
+    function validarPassword(p){
+      if(!p || p.length < 8) return {ok:false, msg:'La contraseña debe tener al menos 8 caracteres.'};
+      if(!/[A-Za-z]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos una letra.'};
+      if(!/[0-9]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos un número.'};
+      if(!/[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?¡¿~`ºª]/.test(p)) return {ok:false, msg:'La contraseña debe contener al menos un símbolo (ej: @ # $ %).' };
+      return {ok:true};
+    }
+
+    function showError(text){
+      msgSuccess.style.display = 'none';
+      msgError.style.display = 'block';
+      msgError.textContent = text;
+      // se oculta en 6s
+      setTimeout(()=> msgError.style.display = 'none', 6000);
+    }
+    function showSuccess(text){
+      msgError.style.display = 'none';
+      msgSuccess.style.display = 'block';
+      msgSuccess.textContent = text;
+      setTimeout(()=> msgSuccess.style.display = 'none', 6000);
+    }
+
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const fullname = (fullnameEl.value || '').trim();
+      const email = (emailEl.value || '').trim().toLowerCase();
+      const pass = passEl.value || '';
+      const pass2 = pass2El.value || '';
+      const country = countryEl.value || 'Perú';
+      const terms = termsEl.checked;
+
+      if(!fullname) { showError('Ingresa tu nombre completo.'); return; }
+      if(!email) { showError('Ingresa un correo electrónico válido.'); return; }
+      // simple regex email
+      if(!/^\S+@\S+\.\S+$/.test(email)){ showError('El formato del correo no es válido.'); return; }
+      if(!terms){ showError('Debes aceptar los términos y la política de privacidad.'); return; }
+
+      // password rules
+      const pwCheck = validarPassword(pass);
+      if(!pwCheck.ok){ showError(pwCheck.msg); return; }
+      if(pass !== pass2){ showError('Las contraseñas no coinciden.'); return; }
+
+      // obtener usuarios existentes
+      const users = getLocalUsers();
+
+      // verificar si el correo ya existe en usuarios locales
+      const existsLocal = users.find(u => (u.email||'').toLowerCase() === email);
+      if(existsLocal){
+        showError('Este correo ya está registrado. Intenta iniciar sesión o usa otro correo.');
+        return;
+      }
+
+      // Nota: según la especificación, cualquier cuenta nueva se marca como cliente.
+      // Permitimos registro incluso si el correo coincide con uno de los administradores, pero se guardará como cliente.
+      const newUser = {
+        id: Date.now(),
+        fullname,
+        email,
+        password: pass,
+        country,
+        role: 'client',
+        created_at: new Date().toISOString()
+      };
+      users.push(newUser);
+      saveLocalUsers(users);
+
+      showSuccess('Cuenta creada correctamente. Serás redirigido al inicio de sesión.');
+      // Limpiar formulario (opcional)
+      form.reset();
+
+      // Redirigir a login en 1.4s
+      setTimeout(() => {
+        // prefill el email en la pantalla de login para comodidad
+        sessionStorage.setItem('prefill_email', email);
+        window.location.href = 'iniciarsesion.html';
+      }, 1400);
+    });
+  </script>
+</body>
+</html>

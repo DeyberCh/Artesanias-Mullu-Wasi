@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Quiénes Somos - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{
+      --accent: rgb(4,68,62);
+      --bg: rgb(227,237,232);
+      --muted: #375d57;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background:var(--bg);
+      color: #043e39;
+      -webkit-font-smoothing:antialiased;
+    }
+    header{
+      background:var(--accent);
+      color:#fff;
+      padding:.8rem 1.2rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:30;
+    }
+    .logo{ font-weight:800; letter-spacing:.6px }
+    nav a{ color:#fff; text-decoration:none; margin-left:.9rem; font-weight:700 }
+    main{ max-width:1100px; margin:1.2rem auto; padding:0 1rem 2rem 1rem; }
+    .hero{
+      background:#fff;
+      border-radius:12px;
+      padding:1.4rem;
+      box-shadow:0 8px 30px rgba(2,20,18,0.06);
+      display:flex;
+      gap:1rem;
+      align-items:center;
+      animation: fadeIn .45s ease;
+    }
+    .hero .left{ flex:1 }
+    .hero h1{ margin:0; color:var(--accent); font-size:1.6rem }
+    .hero p{ margin:.5rem 0 0 0; color:var(--muted) }
+    .hero .img{ width:140px; height:140px; border-radius:12px; overflow:hidden; background:#f4f7f5; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(4,68,62,0.06) }
+    .hero .img img{ width:100%; height:100%; object-fit:cover }
+
+    .grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:1rem; margin-top:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.05); }
+    .section-title{ color:var(--accent); font-weight:800; margin:0 0 .6rem 0 }
+
+    .mission-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem; }
+    .text-muted{ color:var(--muted); line-height:1.5 }
+
+    /* Equipo */
+    .team-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:1rem; margin-top:1rem; }
+    .team-card{ display:flex; gap:.8rem; align-items:center; padding:.8rem; border-radius:10px; background:#fff; box-shadow:0 6px 18px rgba(2,20,18,0.04) }
+    .avatar{ width:72px; height:72px; border-radius:10px; overflow:hidden; background:#eef4f1; display:flex; align-items:center; justify-content:center }
+    .avatar img{ width:100%; height:100%; object-fit:cover }
+    .team-meta h4{ margin:0; color:#1d3b37 }
+    .team-meta p{ margin:4px 0 0 0; color:#3b6a64; font-size:.9rem }
+
+    /* objetivos */
+    .objectives{ margin-top:1rem; display:grid; gap:.6rem; }
+    .obj-item{ background:#fff; padding:.8rem; border-radius:10px; box-shadow:0 6px 18px rgba(2,20,18,0.04); display:flex; gap:.6rem; align-items:flex-start }
+    .obj-bullet{ width:36px; height:36px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800 }
+
+    /* CTA */
+    .cta{ margin-top:1.2rem; background:linear-gradient(90deg, rgba(4,68,62,0.06), rgba(4,68,62,0.02)); padding:1rem; border-radius:12px; display:flex; justify-content:space-between; align-items:center; gap:1rem }
+    .cta .left{ color:var(--muted) }
+    .cta .btn{ background:var(--accent); color:#fff; border:none; padding:.6rem .9rem; border-radius:8px; font-weight:800; cursor:pointer }
+
+    footer{ background:var(--accent); color:#fff; text-align:center; padding:1rem; margin-top:1.6rem }
+
+    @media(max-width:980px){
+      .grid{ grid-template-columns: 1fr; }
+      .mission-grid{ grid-template-columns:1fr }
+    }
+    @keyframes fadeIn { from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:none } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌀 Mullu Wasi</div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="categorias.html">Categorías</a>
+      <a href="contacto.html">Contacto</a>
+      <a href="iniciarsesion.html">Cuenta</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero / Presentación -->
+    <section class="hero">
+      <div class="left">
+        <h1>Quiénes somos</h1>
+        <p class="text-muted">
+          Mullu Wasi nace en Mollepampa, Cajamarca, con la misión de difundir y comercializar
+          productos artesanales que preservan técnicas ancestrales y promueven el desarrollo local.
+          Cada pieza representa identidad, tiempo de trabajo y la historia de su creador.
+        </p>
+      </div>
+      <div class="img">
+        <!-- Coloca una imagen representativa en assets/img/mullu_equipo.jpg -->
+        <img src="../assets/img/mullu_equipo.jpg" alt="Mullu Wasi - artesanos" onerror="this.src='../assets/img/placeholder.png'">
+      </div>
+    </section>
+
+    <!-- Misión / Visión / Valores -->
+    <section class="grid" style="margin-top:1rem">
+      <div class="card">
+        <h3 class="section-title">Nuestra Misión</h3>
+        <p class="text-muted">
+          Empoderar a artesanos locales facilitando acceso a mercados nacionales e internacionales,
+          promoviendo comercio justo y preservando técnicas tradicionales.
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="section-title">Nuestra Visión</h3>
+        <p class="text-muted">
+          Ser la plataforma referente de artesanía cajamarquina, reconocida por su autenticidad,
+          calidad y compromiso con la sostenibilidad cultural y ambiental.
+        </p>
+      </div>
+      <div class="card">
+        <h3 class="section-title">Nuestros Valores</h3>
+        <ul style="margin:0; padding-left:1.05rem; color:var(--muted); line-height:1.6">
+          <li><strong>Respeto:</strong> hacia la tradición y el artista.</li>
+          <li><strong>Sostenibilidad:</strong> prácticas responsables con el entorno.</li>
+          <li><strong>Calidad:</strong> piezas bien hechas que perduran.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Misión/Vision text blocks -->
+    <section class="mission-grid" aria-labelledby="missionTitle" style="margin-top:1rem">
+      <div class="card">
+        <h4 style="margin:0 0 .6rem 0; color:var(--accent)">¿Qué hacemos?</h4>
+        <p class="text-muted">
+          Facilitamos la venta en línea de productos artesanales, brindamos herramientas de promoción
+          y capacitación para talleres y conectamos talento local con compradores que valoran lo auténtico.
+        </p>
+      </div>
+      <div class="card">
+        <h4 style="margin:0 0 .6rem 0; color:var(--accent)">Impacto social</h4>
+        <p class="text-muted">
+          Trabajamos para mejorar los ingresos de familias artesanas, fomentar la transmisión de saberes
+          y promover la economía circular en la comunidad.
+        </p>
+      </div>
+    </section>
+
+    <!-- Objetivos -->
+    <section style="margin-top:1rem">
+      <h3 class="section-title">Objetivos</h3>
+      <div class="objectives">
+        <div class="obj-item">
+          <div class="obj-bullet">1</div>
+          <div>
+            <strong>Promover</strong>
+            <div class="text-muted">Visibilizar el trabajo artesanal de Mollepampa en mercados digitales.</div>
+          </div>
+        </div>
+
+        <div class="obj-item">
+          <div class="obj-bullet">2</div>
+          <div>
+            <strong>Capacitar</strong>
+            <div class="text-muted">Ofrecer formación en gestión, precios justos y marketing a los artesanos.</div>
+          </div>
+        </div>
+
+        <div class="obj-item">
+          <div class="obj-bullet">3</div>
+          <div>
+            <strong>Preservar</strong>
+            <div class="text-muted">Fomentar la continuidad de técnicas tradicionales entre nuevas generaciones.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Equipo -->
+    <section style="margin-top:1rem">
+      <h3 class="section-title">Nuestro equipo</h3>
+      <div class="team-grid">
+        <!-- Tarjeta ejemplo 1 -->
+        <div class="team-card">
+          <div class="avatar"><img src="../assets/img/team_ruiz.jpg" alt="Ruiz" onerror="this.src='../assets/img/placeholder.png'"></div>
+          <div class="team-meta">
+            <h4>Ruiz Carhua</h4>
+            <p>Coordinador de talleres — Experto en cerámica tradicional</p>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="avatar"><img src="../assets/img/team_ariana.jpg" alt="Ariana" onerror="this.src='../assets/img/placeholder.png'"></div>
+          <div class="team-meta">
+            <h4>Ariana Kenari</h4>
+            <p>Responsable de diseño y difusión — Textiles y fibras</p>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="avatar"><img src="../assets/img/team_daniel.jpg" alt="Daniel" onerror="this.src='../assets/img/placeholder.png'"></div>
+          <div class="team-meta">
+            <h4>Daniel Huacha</h4>
+            <p>Logística y distribución — Enlace con talleres</p>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="avatar"><img src="../assets/img/team_marino.jpg" alt="Marino" onerror="this.src='../assets/img/placeholder.png'"></div>
+          <div class="team-meta">
+            <h4>Marino Lu</h4>
+            <p>Operaciones — Madera y acabados</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA contacto -->
+    <section class="cta" style="margin-top:1.2rem">
+      <div class="left">
+        <strong style="display:block;color:var(--accent)">¿Quieres colaborar o vender con nosotros?</strong>
+        <div class="text-muted">Si eres artesano o representante de un taller, contáctanos para integrarte a la plataforma.</div>
+      </div>
+      <div>
+        <a href="contacto.html"><button class="btn">Contactar</button></a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Mullu Wasi — La artesanía es el reflejo de tradición y cultura. © Derechos de autor Mullu Wasi.</p>
+  </footer>
+</body>
+</html>

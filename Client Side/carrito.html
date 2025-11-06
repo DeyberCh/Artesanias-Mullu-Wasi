@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Carrito - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:Inter,system-ui,Arial; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    .container{ max-width:1100px; margin:1rem auto; padding:1rem; }
+    .card{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    h1{ color:var(--accent); margin:0 0 .6rem 0 }
+    .grid{ display:grid; grid-template-columns: 1fr 350px; gap:1rem; align-items:start; }
+    table{ width:100%; border-collapse:collapse; }
+    th, td{ padding:.6rem .5rem; border-bottom:1px solid #eef3ef; vertical-align:middle; }
+    th{ background:#f6faf8; color:#225047; text-align:left; }
+    .product-cell{ display:flex; gap:.6rem; align-items:center; }
+    .product-thumb{ width:70px; height:70px; border-radius:8px; object-fit:cover; background:#f4f6f4; }
+    .qty-input{ width:72px; padding:.35rem; border-radius:8px; border:1px solid #d7e0dc; }
+    .btn{ padding:.5rem .7rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    .summary{ background:#fff; padding:1rem; border-radius:12px; box-shadow:0 6px 20px rgba(2,20,18,0.04); }
+    .line{ display:flex; justify-content:space-between; margin:.45rem 0; color:#374f4b }
+    .total { font-weight:800; font-size:1.15rem; color:var(--accent); }
+    .small{ font-size:.9rem; color:#456b66 }
+    .empty{ padding:2rem; text-align:center; color:#567c74; }
+    @media(max-width:920px){ .grid{ grid-template-columns:1fr } .summary{ position:relative } .product-thumb{ width:56px; height:56px } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Carrito de compras</h1>
+      <p class="small">Revisa tus productos, ajusta cantidades y procede al pago.</p>
+
+      <div class="grid">
+        <div>
+          <div id="tableWrap">
+            <table aria-live="polite">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                  <th>Cantidad</th>
+                  <th>Subtotal</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="cartTbody"></tbody>
+            </table>
+          </div>
+          <div id="emptyMsg" class="empty" style="display:none">
+            Tu carrito está vacío. <a href="index.html" style="color:var(--accent);font-weight:700">Ver productos</a>
+          </div>
+
+          <div style="margin-top:0.8rem; display:flex; gap:.6rem;">
+            <button id="btnClearCart" class="btn btn-ghost">Limpiar carrito</button>
+            <button id="btnContinue" class="btn btn-ghost">Seguir comprando</button>
+          </div>
+        </div>
+
+        <aside>
+          <div class="summary">
+            <h3>Resumen del pedido</h3>
+            <div class="line"><div>Subtotal</div><div id="subtotal">S/ 0.00</div></div>
+            <div class="line" style="align-items:center">
+              <div>
+                <div style="font-weight:700">Entrega</div>
+                <div class="small">Elige el tipo de entrega</div>
+              </div>
+              <div style="text-align:right">
+                <label style="display:block;margin-bottom:.4rem"><input type="radio" name="delivery" value="standard" checked> Estándar (S/ 10.00)</label>
+                <label><input type="radio" name="delivery" value="urgent"> Urgente (S/ 25.00)</label>
+              </div>
+            </div>
+            <div class="line"><div>Impuesto (IGV 18%)</div><div id="tax">S/ 0.00</div></div>
+            <div class="line total"><div>Total</div><div id="grandTotal">S/ 0.00</div></div>
+
+            <div style="margin-top:.8rem">
+              <button id="btnCheckout" class="btn btn-primary" style="width:100%">Proceder al pago</button>
+            </div>
+            <div class="small" style="margin-top:.6rem">Los pagos se procesan en la página de caja (simulado en esta demo).</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Claves
+  const CART_KEY = 'mullu_cart';
+  const PRODUCTS_KEY = 'mullu_products';
+  const CHECKOUT_KEY = 'mullu_checkout';
+  const SESSION_KEY = 'mullu_session';
+
+  // Elementos
+  const cartTbody = document.getElementById('cartTbody');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const tableWrap = document.getElementById('tableWrap');
+  const subtotalEl = document.getElementById('subtotal');
+  const taxEl = document.getElementById('tax');
+  const grandTotalEl = document.getElementById('grandTotal');
+  const btnClearCart = document.getElementById('btnClearCart');
+  const btnContinue = document.getElementById('btnContinue');
+  const btnCheckout = document.getElementById('btnCheckout');
+
+  // Delivery radios
+  function getDeliveryOption(){ const r = document.querySelector('input[name="delivery"]:checked'); return r ? r.value : 'standard'; }
+  function getDeliveryPrice(opt){ return opt === 'urgent' ? 25.00 : 10.00; }
+
+  // Helper localStorage
+  function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e){ return []; } }
+  function saveCart(arr){ localStorage.setItem(CART_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+
+  function formatMoney(n){ return 'S/ ' + Number(n || 0).toFixed(2); }
+
+  // Render carrito
+  function renderCart(){
+    const cart = getCart();
+    if(!cart || cart.length === 0){
+      tableWrap.style.display = 'none';
+      emptyMsg.style.display = 'block';
+      subtotalEl.innerText = formatMoney(0);
+      taxEl.innerText = formatMoney(0);
+      grandTotalEl.innerText = formatMoney(0);
+      return;
+    }
+    tableWrap.style.display = 'block';
+    emptyMsg.style.display = 'none';
+
+    cartTbody.innerHTML = cart.map(item => {
+      const subtotal = Number(item.price) * Number(item.qty || 1);
+      return `<tr data-id="${item.id}">
+        <td>
+          <div class="product-cell">
+            <img src="${item.image || '../assets/img/placeholder.png'}" alt="${escapeHtml(item.name)}" class="product-thumb">
+            <div><strong>${escapeHtml(item.name)}</strong><div class="small">${escapeHtml(item.category || '')}</div></div>
+          </div>
+        </td>
+        <td>${formatMoney(item.price)}</td>
+        <td>
+          <input class="qty-input" type="number" min="1" value="${item.qty}" data-id="${item.id}">
+        </td>
+        <td>${formatMoney(subtotal)}</td>
+        <td><button class="btn btn-ghost btn-remove" data-id="${item.id}">Eliminar</button></td>
+      </tr>`;
+    }).join('');
+
+    // attach events
+    document.querySelectorAll('.qty-input').forEach(inp => {
+      inp.addEventListener('change', (e) => {
+        const id = e.target.dataset.id;
+        let val = Number(e.target.value || 1);
+        if(val < 1) val = 1;
+        updateQty(id, val);
+      });
+    });
+    document.querySelectorAll('.btn-remove').forEach(b => {
+      b.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        if(confirm('Eliminar este producto del carrito?')) removeItem(id);
+      });
+    });
+
+    updateSummary();
+  }
+
+  function updateQty(id, qty){
+    const cart = getCart();
+    const idx = cart.findIndex(i => String(i.id) === String(id));
+    if(idx >= 0){ cart[idx].qty = Number(qty); saveCart(cart); renderCart(); }
+  }
+  function removeItem(id){
+    const cart = getCart().filter(i => String(i.id) !== String(id));
+    saveCart(cart); renderCart();
+  }
+  btnClearCart.addEventListener('click', () => {
+    if(!confirm('¿Limpiar todo el carrito?')) return;
+    localStorage.removeItem(CART_KEY);
+    renderCart();
+  });
+  btnContinue.addEventListener('click', () => window.location.href = 'index.html');
+
+  function updateSummary(){
+    const cart = getCart();
+    const subtotal = cart.reduce((s,i) => s + (Number(i.price) * Number(i.qty || 1)), 0);
+    const deliveryOpt = getDeliveryOption();
+    const deliveryPrice = getDeliveryPrice(deliveryOpt);
+    const igv = subtotal * 0.18;
+    const grand = subtotal + igv + deliveryPrice;
+
+    subtotalEl.innerText = formatMoney(subtotal);
+    taxEl.innerText = formatMoney(igv);
+    grandTotalEl.innerText = formatMoney(grand);
+  }
+
+  // Change delivery option recalculates summary
+  document.querySelectorAll('input[name="delivery"]').forEach(r => r.addEventListener('change', updateSummary));
+
+  // Proceed to checkout: save checkout info and redirect a caja.html
+  btnCheckout.addEventListener('click', () => {
+    const cart = getCart();
+    if(!cart || cart.length === 0){ alert('El carrito está vacío. Agrega productos antes de proceder.'); return; }
+
+    // preparar objeto de checkout
+    const subtotal = cart.reduce((s,i) => s + (Number(i.price) * Number(i.qty || 1)), 0);
+    const deliveryOpt = getDeliveryOption();
+    const deliveryPrice = getDeliveryPrice(deliveryOpt);
+    const igv = subtotal * 0.18;
+    const total = subtotal + igv + deliveryPrice;
+
+    const checkout = {
+      items: cart,
+      subtotal,
+      deliveryOpt,
+      deliveryPrice,
+      igv,
+      total,
+      created_at: new Date().toISOString()
+    };
+    localStorage.setItem(CHECKOUT_KEY, JSON.stringify(checkout));
+
+    // redirigir a caja
+    window.location.href = 'caja.html';
+  });
+
+  // Helper escape
+  function escapeHtml(text){
+    if(!text) return '';
+    return String(text).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; });
+  }
+
+  // inicial
+  renderCart();
+
+  // react to storage changes (otra pestaña)
+  window.addEventListener('storage', (e) => {
+    if(e.key === CART_KEY || e.key === PRODUCTS_KEY) renderCart();
+  });
+</script>
+</body>
+</html>

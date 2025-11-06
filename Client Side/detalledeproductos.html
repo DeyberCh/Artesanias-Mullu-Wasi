@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Detalle del producto - Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Inter,system-ui,Arial; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    .container{ max-width:1100px; margin:1.2rem auto; padding:1rem; }
+    .card{ background:#fff; border-radius:12px; padding:1rem; box-shadow:0 8px 26px rgba(2,20,18,0.06); }
+    .grid{ display:grid; grid-template-columns: 420px 1fr; gap:1rem; align-items:start; }
+    .img-wrap{ background:#f6fbf9; border-radius:12px; padding:1rem; display:flex; align-items:center; justify-content:center; }
+    .img-wrap img{ max-width:100%; max-height:420px; border-radius:8px; object-fit:contain; }
+    .meta h1{ margin:0; color:var(--accent); font-size:1.5rem; }
+    .meta .cat{ color:#3b6a64; font-weight:700; margin-top:.35rem; }
+    .price{ font-size:1.25rem; font-weight:800; color:var(--accent); margin-top:.6rem; }
+    .desc{ margin-top:.8rem; color:#375d57; line-height:1.5; }
+    .purchase { margin-top:1rem; display:flex; gap:.6rem; align-items:center; }
+    .qty { width:110px; display:flex; gap:.4rem; align-items:center; }
+    .qty input{ width:64px; padding:.45rem .5rem; border-radius:8px; border:1px solid #d7e0dc; text-align:center; }
+    .btn{ padding:.6rem .9rem; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary{ background:var(--accent); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.12); color:var(--accent); }
+    .stock { margin-left:.6rem; color:#375d57; font-weight:600; }
+    .related { margin-top:1.2rem; }
+    .related h3{ margin:0 0 .6rem 0; color:var(--accent); }
+    .related-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:.6rem; }
+    .rel-card{ background:#fff; border-radius:10px; padding:.5rem; text-align:center; box-shadow:0 6px 18px rgba(2,20,18,0.04); cursor:pointer; }
+    .rel-card img{ width:100%; height:100px; object-fit:cover; border-radius:8px; }
+    .small{ font-size:.9rem; color:#456b66; }
+    .breadcrumbs{ font-size:.9rem; color:#456b66; margin-bottom:.6rem; }
+    @media(max-width:950px){ .grid{ grid-template-columns:1fr } .img-wrap img{ max-height:320px } .related-grid{ grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="breadcrumbs">
+      <a href="index.html" style="color:var(--accent);font-weight:700;text-decoration:none">Inicio</a> ›
+      <a href="categorias.html" style="color:#375d57;text-decoration:none">Categorías</a> ›
+      <span id="crumbName" style="color:#456b66">Detalle</span>
+      <div style="float:right">Carrito: <a href="carrito.html" style="color:var(--accent); font-weight:700" id="cartCountLink">0</a></div>
+    </nav>
+
+    <div class="card">
+      <div class="grid">
+        <div class="img-wrap" id="imgWrap">
+          <img id="productImage" src="../assets/img/placeholder.png" alt="Imagen del producto">
+        </div>
+
+        <div>
+          <div class="meta">
+            <h1 id="productName">Nombre del producto</h1>
+            <div class="cat small" id="productCategory">Categoría</div>
+            <div class="price" id="productPrice">S/ 0.00</div>
+            <div class="stock small" id="productStock">Stock: 0</div>
+            <p class="desc" id="productDesc">Descripción del producto...</p>
+
+            <div class="purchase" aria-label="Acciones de compra">
+              <div class="qty">
+                <label for="qtyInput" class="small" style="margin-right:.4rem">Cantidad</label>
+                <input id="qtyInput" type="number" min="1" value="1" />
+              </div>
+              <button id="btnAddCart" class="btn btn-primary">Añadir al carrito</button>
+              <button id="btnBuyNow" class="btn btn-ghost">Comprar ahora</button>
+            </div>
+
+            <div id="msgArea" style="margin-top:.8rem"></div>
+
+            <div class="related" id="relatedSection">
+              <h3>Productos relacionados</h3>
+              <div class="related-grid" id="relatedGrid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Keys
+  const PRODUCTS_KEY = 'mullu_products';
+  const CART_KEY = 'mullu_cart';
+  const SESSION_KEY = 'mullu_session';
+
+  // DOM
+  const productImage = document.getElementById('productImage');
+  const productName = document.getElementById('productName');
+  const productCategory = document.getElementById('productCategory');
+  const productPrice = document.getElementById('productPrice');
+  const productDesc = document.getElementById('productDesc');
+  const qtyInput = document.getElementById('qtyInput');
+  const btnAddCart = document.getElementById('btnAddCart');
+  const btnBuyNow = document.getElementById('btnBuyNow');
+  const productStock = document.getElementById('productStock');
+  const relatedGrid = document.getElementById('relatedGrid');
+  const crumbName = document.getElementById('crumbName');
+  const msgArea = document.getElementById('msgArea');
+  const cartCountLink = document.getElementById('cartCountLink');
+
+  // util
+  function getQueryParam(name){
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+  function getProducts(){
+    try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch(e){ return []; }
+  }
+  function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e){ return []; } }
+  function saveCart(arr){ localStorage.setItem(CART_KEY, JSON.stringify(arr)); window.dispatchEvent(new Event('storage')); }
+
+  function formatMoney(n){ return 'S/ ' + Number(n || 0).toFixed(2); }
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // update cart count in header
+  function updateCartCount(){
+    const cart = getCart();
+    const total = cart.reduce((s,i) => s + (Number(i.qty) || 0), 0);
+    cartCountLink.textContent = total;
+  }
+
+  // render product detail
+  function renderProduct(p){
+    productImage.src = p.image || '../assets/img/placeholder.png';
+    productImage.alt = p.name || 'Imagen';
+    productName.textContent = p.name || 'Sin nombre';
+    productCategory.textContent = p.category || '-';
+    productPrice.textContent = formatMoney(p.price || 0);
+    productDesc.textContent = p.desc || 'Sin descripción.';
+    productStock.textContent = 'Stock: ' + (p.stock != null ? p.stock : '0');
+    crumbName.textContent = p.name || 'Detalle';
+    // if stock is zero, disable add
+    const stockNum = Number(p.stock || 0);
+    if(stockNum <= 0){
+      qtyInput.value = 0;
+      qtyInput.disabled = true;
+      btnAddCart.disabled = true;
+      btnBuyNow.disabled = true;
+      showMessage('Agotado', 'error');
+    }
+  }
+
+  // show message under actions
+  function showMessage(text, type='info'){
+    msgArea.innerHTML = `<div style="padding:.5rem;border-radius:8px;${type==='error' ? 'background:#ffecec;color:#7a2323;border:1px solid #f2c6c6' : 'background:#e9f7ef;color:#135e34;border:1px solid #cdebd1'}">${escapeHtml(text)}</div>`;
+    setTimeout(()=> { msgArea.innerHTML = ''; }, 4000);
+  }
+
+  // add to cart logic
+  function addToCart(productId, qty){
+    const prods = getProducts();
+    const p = prods.find(x => String(x.id) === String(productId));
+    if(!p){ alert('Producto no encontrado'); return; }
+    if(!qty || qty < 1) qty = 1;
+    // check stock
+    const stock = Number(p.stock || 0);
+    if(stock > 0 && qty > stock){
+      showMessage(`Sólo quedan ${stock} unidades en stock. Ajusta la cantidad.`, 'error');
+      return;
+    }
+
+    const cart = getCart();
+    const itemIdx = cart.findIndex(i => String(i.id) === String(productId));
+    if(itemIdx >= 0){
+      cart[itemIdx].qty = Number(cart[itemIdx].qty || 0) + Number(qty);
+    } else {
+      cart.push({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price || 0),
+        qty: Number(qty),
+        image: p.image || '',
+        category: p.category || ''
+      });
+    }
+    saveCart(cart);
+    updateCartCount();
+    showMessage('Producto añadido al carrito', 'success');
+  }
+
+  // buy now: add to cart and redirect to caja (via carrito->checkout)
+  function buyNow(productId, qty){
+    addToCart(productId, qty);
+    // redirect to carrito so user can proceed
+    window.location.href = 'carrito.html';
+  }
+
+  // render related products (same category, excluding current)
+  function renderRelated(currentId, category){
+    const prods = getProducts();
+    const related = prods.filter(p => p.category === category && String(p.id) !== String(currentId)).slice(0,6);
+    if(related.length === 0){
+      relatedGrid.innerHTML = '<div class="small">No hay productos relacionados.</div>';
+      return;
+    }
+    relatedGrid.innerHTML = related.map(r => {
+      const img = r.image || '../assets/img/placeholder.png';
+      return `<div class="rel-card" data-id="${r.id}">
+        <img src="${img}" alt="${escapeHtml(r.name)}">
+        <div style="margin-top:.4rem;font-weight:700">${escapeHtml(r.name)}</div>
+        <div class="small">S/ ${Number(r.price || 0).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+
+    // attach click
+    Array.from(relatedGrid.querySelectorAll('.rel-card')).forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.dataset.id;
+        window.location.href = `detalledeproductos.html?id=${id}`;
+      });
+    });
+  }
+
+  // main
+  (function init(){
+    updateCartCount();
+    const id = getQueryParam('id');
+    const prods = getProducts();
+    if(!id){
+      alert('Producto no especificado. Volviendo a productos.');
+      window.location.href = 'categorias.html';
+      return;
+    }
+    const product = prods.find(p => String(p.id) === String(id));
+    if(!product){
+      alert('Producto no encontrado. Volviendo a productos.');
+      window.location.href = 'categorias.html';
+      return;
+    }
+    renderProduct(product);
+    renderRelated(product.id, product.category);
+
+    // Attach events
+    btnAddCart.addEventListener('click', () => {
+      const qty = Number(qtyInput.value || 1);
+      addToCart(product.id, qty);
+    });
+    btnBuyNow.addEventListener('click', () => {
+      const qty = Number(qtyInput.value || 1);
+      buyNow(product.id, qty);
+    });
+
+    // keyboard: allow enter to add
+    qtyInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){ e.preventDefault(); btnAddCart.click(); }
+    });
+
+    // listen for storage changes to update cart count live
+    window.addEventListener('storage', (e) => {
+      if(e.key === CART_KEY) updateCartCount();
+    });
+  })();
+</script>
+</body>
+</html>

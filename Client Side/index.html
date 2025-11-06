@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mullu Wasi | Artesanía Cajamarquina</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root { --accent: rgb(4,68,62); --bg: rgb(227,237,232); }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family: Inter, system-ui, Arial; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:.9rem 1.25rem; position:sticky; top:0; z-index:50; }
+    .logo{ font-weight:800; font-size:1.25rem; letter-spacing:0.6px }
+    .nav-right{ display:flex; gap:.6rem; align-items:center }
+    .search{ padding:.45rem .6rem; border-radius:8px; border:none; width:280px; }
+    .hero{ padding:2.2rem 1rem; text-align:center; background:linear-gradient(90deg, rgba(4,68,62,0.06), transparent); }
+    .hero h1{ color:var(--accent); font-size:2rem; margin:0 }
+    .container{ max-width:1100px; margin:1rem auto; padding:0 1rem; }
+    .section-title{ color:var(--accent); margin:1rem 0 .6rem 0; font-weight:800 }
+    .grid-products{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; }
+    .product-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(2,20,18,0.06); display:flex; flex-direction:column; transition:transform .18s ease, box-shadow .18s ease; }
+    .product-card:hover{ transform:translateY(-6px); box-shadow:0 14px 36px rgba(2,20,18,0.10); }
+    .product-image{ width:100%; height:160px; object-fit:cover; display:block; }
+    .product-body{ padding:.7rem 0.8rem; flex:1; display:flex; flex-direction:column; justify-content:space-between; }
+    .prod-title{ font-size:1.02rem; margin:0 0 .35rem 0; color:#163; font-weight:700 }
+    .prod-cat{ font-size:.85rem; color:#3b6a64; margin-bottom:.6rem; font-weight:600 }
+    .prod-price{ color:var(--accent); font-weight:800; margin-bottom:.6rem }
+    .prod-actions{ display:flex; gap:.5rem; align-items:center; }
+    .btn{ padding:.5rem .65rem; border-radius:8px; border:none; cursor:pointer; font-weight:700 }
+    .btn-primary{ background:var(--accent); color:#fff }
+    .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.08); color:var(--accent) }
+    footer{ background:var(--accent); color:#fff; text-align:center; padding:1rem; margin-top:1.5rem }
+    @media(max-width:720px){ .search{ width:140px } .product-image{ height:140px } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌀 Mullu Wasi</div>
+    <div class="nav-right">
+      <input id="searchMain" class="search" placeholder="Buscar productos..." />
+      <a href="categorias.html" style="color:#fff; text-decoration:none; font-weight:700">Categorías</a>
+      <a href="carrito.html" style="color:#fff; text-decoration:none; font-weight:700">Carrito (<span id="cartCount">0</span>)</a>
+      <a href="iniciarsesion.html" style="color:#fff; text-decoration:none; font-weight:700">Cuenta</a>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="container">
+      <h1>Artesanía desde Mollepampa al mundo</h1>
+      <p style="color:#2f5f57; margin-top:.6rem">Piezas únicas hechas con tradición y cariño — descubre lo mejor de nuestros artesanos.</p>
+    </div>
+  </main>
+
+  <section class="container">
+    <h2 class="section-title">Productos destacados</h2>
+    <div id="productsGrid" class="grid-products" aria-live="polite"></div>
+    <div id="noProducts" style="display:none; margin-top:1rem; text-align:center; color:#567c74">No hay productos disponibles.</div>
+  </section>
+
+  <footer>
+    <p>Mullu Wasi — La artesanía es el reflejo de tradición y cultura. © Derechos de autor Mullu Wasi.</p>
+  </footer>
+
+  <!-- seed debe cargarse antes del script que renderiza productos -->
+  <script src="../assets/js/seed_products.js"></script>
+  <!-- script para renderizar productos en index (in-line para facilitar pegar) -->
+  <script>
+    // Usa mullu_products
+    function getProducts(){ try { return JSON.parse(localStorage.getItem('mullu_products') || '[]'); } catch(e){ return []; } }
+    function getCart(){ try { return JSON.parse(localStorage.getItem('mullu_cart') || '[]'); } catch(e){ return []; } }
+    function saveCart(c){ localStorage.setItem('mullu_cart', JSON.stringify(c)); window.dispatchEvent(new Event('storage')); }
+
+    const grid = document.getElementById('productsGrid');
+    const noProducts = document.getElementById('noProducts');
+    const cartCount = document.getElementById('cartCount');
+    const searchMain = document.getElementById('searchMain');
+
+    function renderGrid(filter=''){
+      const prods = getProducts();
+      const list = (filter && filter.trim()) ? prods.filter(p => (p.name||'').toLowerCase().includes(filter.toLowerCase()) || (p.desc||'').toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase())) : prods;
+      if(!list || list.length === 0){ grid.innerHTML=''; noProducts.style.display='block'; return; }
+      noProducts.style.display='none';
+      grid.innerHTML = list.map(p => {
+        const img = p.image || '../assets/img/placeholder.png';
+        return `<article class="product-card" data-id="${p.id}">
+          <img class="product-image" src="${img}" alt="${escapeHtml(p.name)}" loading="lazy">
+          <div class="product-body">
+            <div>
+              <div class="prod-title">${escapeHtml(p.name)}</div>
+              <div class="prod-cat">${escapeHtml(p.category)}</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div class="prod-price">S/ ${Number(p.price||0).toFixed(2)}</div>
+                <div class="small">Stock: ${p.stock != null ? p.stock : '-'}</div>
+              </div>
+              <div class="prod-actions">
+                <button class="btn btn-primary btn-add" data-id="${p.id}">Añadir</button>
+                <button class="btn btn-ghost" onclick="location.href='detalledeproductos.html?id=${p.id}'">Ver</button>
+              </div>
+            </div>
+          </div>
+        </article>`;
+      }).join('');
+      // attach add events
+      Array.from(document.querySelectorAll('.btn-add')).forEach(b => b.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        addToCart(id);
+      }));
+    }
+
+    function addToCart(id){
+      const prods = getProducts();
+      const p = prods.find(x => String(x.id) === String(id));
+      if(!p){ alert('Producto no encontrado'); return; }
+      const cart = getCart();
+      const item = cart.find(i => String(i.id) === String(id));
+      if(item) item.qty = Number(item.qty || 0) + 1;
+      else cart.push({ id: p.id, name: p.name, price: p.price, qty: 1, image: p.image || '', category: p.category });
+      saveCart(cart);
+      updateCartCount();
+      // pequeño feedback
+      const btn = document.querySelector('.btn-add[data-id="'+id+'"]');
+      if(btn){ btn.textContent = 'Añadido'; setTimeout(()=> btn.textContent = 'Añadir', 900); }
+    }
+
+    function updateCartCount(){
+      const c = getCart().reduce((s,i)=> s + (Number(i.qty)||0), 0);
+      cartCount.textContent = c;
+    }
+
+    function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    // eventos
+    searchMain.addEventListener('input', (e) => renderGrid(e.target.value));
+    window.addEventListener('storage', (e)=> { if(e.key === 'mullu_cart') updateCartCount(); if(e.key === 'mullu_products') renderGrid(searchMain.value); });
+
+    // inicial
+    renderGrid();
+    updateCartCount();
+  </script>
+</body>
+</html>
