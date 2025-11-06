@@ -173,7 +173,7 @@
         // Guardar sesión mínima y redirigir a dashboard admin
         localStorage.setItem('mullu_session', JSON.stringify({ email: admin.email, role: 'admin', name: admin.email }));
         // Redirigir al panel administrador (ruta relativa tal como en la plantilla)
-        window.location.href = '../Admin Side/dashboard.html';
+        window.location.href = '../dashboard.html';
         return;
       }
 
