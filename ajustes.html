@@ -124,7 +124,7 @@
   const ADMIN_PROFILE_KEY = 'mullu_admin_profile';
 
   const session = (function(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } })();
-  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = '../Client Side/iniciarsesion.html'; }
+  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = '../iniciarsesion.html'; }
 
   // DOM
   const avatarInput = document.getElementById('avatarInput');

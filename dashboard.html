@@ -206,7 +206,7 @@
 
   // check session admin
   const session = (() => { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } })();
-  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = '../Client Side/iniciarsesion.html'; }
+  if(!session || session.role !== 'admin'){ alert('Acceso no autorizado. Inicia sesión como administrador.'); window.location.href = '../iniciarsesion.html'; }
 
   // DOM
   const totalSalesS = document.getElementById('totalSalesS');
@@ -501,11 +501,11 @@
   btnLogout.addEventListener('click', () => {
     if(confirm('Cerrar sesión del administrador?')){
       localStorage.removeItem(SESSION_KEY);
-      window.location.href = '../Client Side/iniciarsesion.html';
+      window.location.href = '../iniciarsesion.html';
     }
   });
 
-  btnOpenClient.addEventListener('click', () => { window.open('../Client Side/index.html', '_blank'); });
+  btnOpenClient.addEventListener('click', () => { window.open('../index.html', '_blank'); });
   btnUsers.addEventListener('click', () => { window.location.href = 'usuarios.html'; });
   btnCategorias.addEventListener('click', () => { window.location.href = 'categorias-admin.html'; });
 
