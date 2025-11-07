@@ -6,19 +6,68 @@
   <title>Mullu Wasi | Artesanía Cajamarquina</title>
   <link rel="stylesheet" href="../assets/css/style.css" />
   <style>
-    :root { --accent: rgb(4,68,62); --bg: rgb(227,237,232); --muted:#375d57; }
-    *{ box-sizing:border-box }
+    :root { --accent: rgb(4,68,62); --bg: rgb(227,237,232); --muted:#375d57; --card-bg:#fff; }
+    *{ box-sizing:border-box; }
     body{ margin:0; font-family: Inter, system-ui, Arial; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
-    header{ background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:.9rem 1.25rem; position:sticky; top:0; z-index:50; }
+    header{ background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:.9rem 1.25rem; position:sticky; top:0; z-index:90; }
     .logo{ font-weight:800; font-size:1.25rem; letter-spacing:0.6px }
     .nav-right{ display:flex; gap:.6rem; align-items:center }
     .search{ padding:.45rem .6rem; border-radius:8px; border:none; width:280px; }
-    .hero{ padding:2.2rem 1rem; text-align:center; background:linear-gradient(90deg, rgba(4,68,62,0.06), transparent); }
-    .hero h1{ color:var(--accent); font-size:2rem; margin:0 }
-    .container{ max-width:1100px; margin:1rem auto; padding:0 1rem; }
+
+    /* SLIDER: full-bleed with small lateral margin */
+    .slider-wrap { width:100%; display:block; background:transparent; padding:0 0px; margin-top:0px; }
+    .slider {
+      width: calc(100% - 0px); /* leaves a 12px margin both sides */
+      margin: 0 auto;
+      border-radius:1px;
+      overflow:hidden;
+      box-shadow:0 14px 48px rgb(4, 68, 62);
+      background:rgb(4, 68, 62);
+      position:relative;
+      min-height: 360px;
+    }
+    .slides { display:flex; transition: transform .7s cubic-bezier(.22,.9,.33,1); will-change:transform; }
+    .slide { min-width:100%; position:relative; height:360px; display:block; }
+    .slide img { width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.02); transition:transform 8s linear; }
+    .slide.active img { transform:scale(1); }
+    .slide-caption {
+      position:absolute;
+      left:4%;
+      bottom:6%;
+      color:#fff;
+      text-shadow:0 8px 30px rgba(2,20,18,0.6);
+      max-width:46%;
+      background: linear-gradient(90deg, rgba(0,0,0,0.32), rgba(0,0,0,0.12));
+      padding:1rem 1.1rem;
+      border-radius:10px;
+      backdrop-filter: blur(3px);
+    }
+    .slide-caption h2{ margin:0 0 .3rem 0; font-size:1.6rem; line-height:1.05 }
+    .slide-caption p{ margin:0 0 .6rem 0; color:rgba(255,255,255,0.92) }
+    .slide-caption .cta { display:inline-block; padding:.45rem .7rem; border-radius:8px; background:var(--accent); color:#fff; font-weight:700; text-decoration:none; }
+
+    /* controls */
+    .slider .control {
+      position:absolute; top:50%; transform:translateY(-50%); z-index:60;
+      background:rgba(0,0,0,0.32); border:none; color:#fff; width:44px; height:44px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; cursor:pointer;
+      backdrop-filter: blur(4px);
+    }
+    .slider .control:hover { background:rgba(0,0,0,0.5); }
+    .slider .prev { left:14px; }
+    .slider .next { right:14px; }
+
+    .dots { position:absolute; left:50%; transform:translateX(-50%); bottom:14px; display:flex; gap:.5rem; z-index:70; }
+    .dot { width:10px; height:10px; border-radius:999px; background:rgba(255,255,255,0.45); cursor:pointer; border:1px solid rgba(0,0,0,0.08); }
+    .dot.active { background:#fff; width:12px; height:12px; }
+
+    /* Content area */
+    .container{ max-width:1100px; margin:1.1rem auto; padding:0 1rem; }
     .section-title{ color:var(--accent); margin:1rem 0 .6rem 0; font-weight:800 }
-    .grid-products{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; }
-    .product-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(2,20,18,0.06); display:flex; flex-direction:column; transition:transform .18s ease, box-shadow .18s ease; }
+
+    /* PRODUCTS GRID (limit 12) */
+    .grid-products{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; margin-top:.6rem; }
+    .product-card{ background:var(--card-bg); border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(2,20,18,0.06); display:flex; flex-direction:column; transition:transform .18s ease, box-shadow .18s ease; }
     .product-card:hover{ transform:translateY(-6px); box-shadow:0 14px 36px rgba(2,20,18,0.10); }
     .product-image{ width:100%; height:160px; object-fit:cover; display:block; }
     .product-body{ padding:.7rem 0.8rem; flex:1; display:flex; flex-direction:column; justify-content:space-between; }
@@ -29,58 +78,20 @@
     .btn{ padding:.5rem .65rem; border-radius:8px; border:none; cursor:pointer; font-weight:700 }
     .btn-primary{ background:var(--accent); color:#fff }
     .btn-ghost{ background:transparent; border:1px solid rgba(4,68,62,0.08); color:var(--accent) }
-    footer{ background:var(--accent); color:#fff; text-align:center; padding:1rem; margin-top:1.5rem }
 
-    /* --- NUEVA SECCIÓN: tarjetas finales --- */
+    /* final-section (cards) kept smaller for brevity */
     .final-section{ max-width:1100px; margin:2rem auto; padding:0 1rem; }
-    .final-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:1rem;
-      height:420px;
-    }
-    /* izquierda ocupa la mitad vertical (columna 1 full height) */
-    .card-large{
-      background:#fff;
-      border-radius:12px;
-      overflow:hidden;
-      display:flex;
-      gap:0;
-      box-shadow:0 10px 40px rgba(2,20,18,0.06);
-      align-items:stretch;
-    }
-    .card-large .left{
-      padding:1.4rem;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-    }
+    .final-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:1rem; height:420px; }
+    .card-large{ background:var(--card-bg); border-radius:12px; overflow:hidden; display:flex; gap:0; box-shadow:0 10px 40px rgba(2,20,18,0.06); align-items:stretch; }
+    .card-large .left{ padding:1.4rem; flex:1; display:flex; flex-direction:column; justify-content:center; }
     .card-large h3{ margin:0 0 .6rem 0; color:var(--accent); font-size:1.4rem }
     .card-large p{ color:var(--muted); margin:0 0 1rem 0; line-height:1.5 }
-    .card-large .cta{ margin-top:1rem }
     .card-large .img-wrap{ width:50%; min-width:260px; height:100%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#f4f7f5; }
     .card-large .img-wrap img{ width:100%; height:100%; object-fit:cover; }
 
-    /* derecha se divide en dos filas, cada una una tarjeta */
     .right-column{ display:flex; flex-direction:column; gap:1rem; }
-    .small-card{
-      background:#fff;
-      border-radius:12px;
-      overflow:hidden;
-      display:flex;
-      gap:0;
-      box-shadow:0 8px 26px rgba(2,20,18,0.06);
-      align-items:stretch;
-      height:50%;
-    }
-    .small-card .content{
-      padding:1rem;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-    }
+    .small-card{ background:var(--card-bg); border-radius:12px; overflow:hidden; display:flex; gap:0; box-shadow:0 8px 26px rgba(2,20,18,0.06); align-items:stretch; height:50%; }
+    .small-card .content{ padding:1rem; flex:1; display:flex; flex-direction:column; justify-content:center; }
     .small-card .content h4{ margin:0 0 .4rem 0; color:var(--accent) }
     .small-card .content p{ margin:0 0 .6rem 0; color:var(--muted) }
     .small-card .thumb{ width:44%; min-width:180px; background:#f4f7f5; display:flex; align-items:center; justify-content:center; overflow:hidden; }
@@ -88,6 +99,8 @@
 
     /* responsive */
     @media(max-width:980px){
+      .slider { border-radius:10px; }
+      .slide { height:260px; }
       .final-grid{ grid-template-columns: 1fr; height:auto; }
       .card-large{ flex-direction:column; }
       .card-large .img-wrap{ width:100%; height:220px; min-width:unset }
@@ -98,8 +111,8 @@
     @media(max-width:720px){
       .search{ width:140px }
       .product-image{ height:140px }
-      .final-grid{ gap:.6rem }
-      .card-large .left{ padding:1rem }
+      .slide-caption{ max-width:70%; left:6%; bottom:6%; }
+      .slide-caption h2{ font-size:1.2rem }
     }
   </style>
 </head>
@@ -107,77 +120,123 @@
   <header>
     <div class="logo">🌀 Mullu Wasi</div>
     <div class="nav-right">
-      <input id="searchMain" class="search" placeholder="Buscar productos..." />
+      <input id="searchMain" class="search" placeholder="Buscar productos..." aria-label="Buscar productos" />
       <a href="categorias.html" style="color:#fff; text-decoration:none; font-weight:700">Categorías</a>
       <a href="carrito.html" style="color:#fff; text-decoration:none; font-weight:700">Carrito (<span id="cartCount">0</span>)</a>
       <a href="iniciarsesion.html" style="color:#fff; text-decoration:none; font-weight:700">Cuenta</a>
     </div>
   </header>
 
-  <main class="hero">
-    <div class="container">
-      <h1>Artesanía desde Mollepampa al mundo</h1>
-      <p style="color:#2f5f57; margin-top:.6rem">Piezas únicas hechas con tradición y cariño — descubre lo mejor de nuestros artesanos.</p>
-    </div>
-  </main>
-
-  <section class="container">
-    <h2 class="section-title">Productos destacados</h2>
-    <div id="productsGrid" class="grid-products" aria-live="polite"></div>
-    <div id="noProducts" style="display:none; margin-top:1rem; text-align:center; color:#567c74">No hay productos disponibles.</div>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Tendencias / Talleres / Artesanos -->
-  <section class="final-section" aria-labelledby="finalTitle">
-    <h2 id="finalTitle" class="section-title">Explora más</h2>
-    <div class="final-grid" role="region" aria-label="Tienda, Talleres y Artesanos">
-      <!-- Izquierda: tarjeta grande (ocupa la mitad vertical) -->
-      <article class="card-large" role="article" aria-labelledby="tendTitle">
-        <div class="left">
-          <h3 id="tendTitle">Tendencias ahora — Tienda</h3>
-          <p>Conoce nuestros rubros y los trabajos que producimos en nuestros talleres. Encuentra piezas únicas y colecciones seleccionadas por su tradición y calidad.</p>
-          <div class="cta">
-            <a href="categorias.html" class="btn btn-primary" style="text-decoration:none">Explorar Colección</a>
+  <!-- SLIDER (full-width with small margins) -->
+  <div class="slider-wrap" aria-hidden="false">
+    <div class="slider" id="mainSlider" role="region" aria-roledescription="carousel" aria-label="Promociones Mullu Wasi" tabindex="0">
+      <div class="slides" id="slides">
+        <div class="slide active" data-index="0" aria-hidden="false">
+          <img src="../assets/img/slide1.png" alt="Artesanía tradicional">
+          <div class="slide-caption">
+            <h2>Artesanía tradicional</h2>
+            <p>Descubre piezas únicas hechas en Mollepampa — tradición y técnica ancestral.</p>
+            <a class="cta" href="categorias.html">Ver colecciones</a>
           </div>
         </div>
-        <div class="img-wrap" aria-hidden="true">
-          <img src="../assets/img/tienda.png" alt="Tienda Mullu Wasi" onerror="this.src='../assets/img/placeholder.png'">
+
+        <div class="slide" data-index="1" aria-hidden="true">
+          <img src="../assets/img/slide2.png" alt="Talleres abiertos">
+          <div class="slide-caption">
+            <h2>Talleres abiertos</h2>
+            <p>Visita nuestros talleres y vive el proceso de creación con los artesanos.</p>
+            <a class="cta" href="talleres.html">Conocer talleres</a>
+          </div>
         </div>
-      </article>
 
-      <!-- Derecha: dos pequeñas (stacked) -->
-      <div class="right-column">
-        <article class="small-card" role="article" aria-labelledby="tallerTitle">
-          <div class="content">
-            <h4 id="tallerTitle">Talleres</h4>
-            <p>Descubre todos nuestros talleres donde producimos estas artesanías. Vive la experiencia del trabajo artesanal y conoce a los creadores.</p>
-            <div>
-              <a href="talleres.html" class="btn btn-ghost" style="text-decoration:none">Descubrir</a>
-            </div>
+        <div class="slide" data-index="2" aria-hidden="true">
+          <img src="../assets/img/slide3.png" alt="Artesanos locales">
+          <div class="slide-caption">
+            <h2>Artesanos locales</h2>
+            <p>Apoya a los creadores del Barrio Mollepampa, cada compra transforma vidas.</p>
+            <a class="cta" href="artesanos.html">Conocer artesanos</a>
           </div>
-          <div class="thumb" aria-hidden="true">
-            <img src="../assets/img/talleres.png" alt="Talleres Mullu Wasi" onerror="this.src='../assets/img/placeholder.png'">
-          </div>
-        </article>
+        </div>
 
-        <article class="small-card" role="article" aria-labelledby="artesanoTitle">
-          <div class="content">
-            <h4 id="artesanoTitle">Artesanos</h4>
-            <p>Conoce a nuestros artesanos — las manos que dan vida a cada pieza. Aprende sobre su historia, técnicas y talleres.</p>
-            <div>
-              <a href="artesanos.html" class="btn btn-ghost" style="text-decoration:none">Conocer</a>
-            </div>
+        <div class="slide" data-index="3" aria-hidden="true">
+          <img src="../assets/img/slide4.png" alt="Envíos internacionales">
+          <div class="slide-caption">
+            <h2>Envíos internacionales</h2>
+            <p>Llevamos nuestras piezas a todo el mundo. Envíos seguros y seguimiento.</p>
+            <a class="cta" href="caja.html">Comprar ahora</a>
           </div>
-          <div class="thumb" aria-hidden="true">
-            <img src="../assets/img/artesanos.png" alt="Artesanos Mullu Wasi" onerror="this.src='../assets/img/placeholder.png'">
-          </div>
-        </article>
+        </div>
 
+        <div class="slide" data-index="4" aria-hidden="true">
+          <img src="../assets/img/slide5.png" alt="Colecciones exclusivas">
+          <div class="slide-caption">
+            <h2>Colecciones exclusivas</h2>
+            <p>Seleccionamos piezas por temporada — descubre las novedades.</p>
+            <a class="cta" href="categorias.html">Explorar</a>
+          </div>
+        </div>
       </div>
+
+      <button class="control prev" id="prevBtn" aria-label="Anterior" title="Anterior">&lt;</button>
+      <button class="control next" id="nextBtn" aria-label="Siguiente" title="Siguiente">&gt;</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Controles del carrusel"></div>
     </div>
-    <br>
-    <br>
-  </section>
+  </div>
+
+  <main class="container" id="mainContent">
+    <section>
+      <h2 class="section-title">Productos destacados</h2>
+      <div id="productsGrid" class="grid-products" aria-live="polite" aria-label="Productos destacados"></div>
+      <div id="noProducts" style="display:none; margin-top:1rem; text-align:center; color:#567c74">No hay productos disponibles.</div>
+    </section>
+
+    <!-- FINAL CARDS -->
+    <section class="final-section" aria-labelledby="finalTitle">
+      <h2 id="finalTitle" class="section-title">Explora más</h2>
+      <div class="final-grid" role="region" aria-label="Tienda, Talleres y Artesanos">
+        <article class="card-large" role="article" aria-labelledby="tendTitle">
+          <div class="left">
+            <h3 id="tendTitle">Tendencias ahora — Tienda</h3>
+            <p>Conoce nuestros rubros y los trabajos que producimos en nuestros talleres. Encuentra piezas únicas y colecciones seleccionadas por su tradición y calidad.</p>
+            <div class="cta">
+              <a href="categorias.html" class="btn btn-primary" style="text-decoration:none">Explorar Colección</a>
+            </div>
+          </div>
+          <div class="img-wrap" aria-hidden="true">
+            <img src="../assets/img/tienda.png" alt="Tienda Mullu Wasi" onerror="this.src='../assets/img/placeholder.png'">
+          </div>
+        </article>
+
+        <div class="right-column">
+          <article class="small-card" role="article" aria-labelledby="tallerTitle">
+            <div class="content">
+              <h4 id="tallerTitle">Talleres</h4>
+              <p>Descubre todos nuestros talleres donde producimos estas artesanías. Vive la experiencia del trabajo artesanal y conoce a los creadores.</p>
+              <div>
+                <a href="talleres.html" class="btn btn-ghost" style="text-decoration:none">Descubrir</a>
+              </div>
+            </div>
+            <div class="thumb" aria-hidden="true">
+              <img src="../assets/img/talleres.png" alt="Talleres Mullu Wasi" onerror="this.src='../assets/img/placeholder.png'">
+            </div>
+          </article>
+
+          <article class="small-card" role="article" aria-labelledby="artesanoTitle">
+            <div class="content">
+              <h4 id="artesanoTitle">Artesanos</h4>
+              <p>Conoce a nuestros artesanos — las manos que dan vida a cada pieza. Aprende sobre su historia, técnicas y talleres.</p>
+              <div>
+                <a href="artesanos.html" class="btn btn-ghost" style="text-decoration:none">Conocer</a>
+              </div>
+            </div>
+            <div class="thumb" aria-hidden="true">
+              <img src="../assets/img/artesanos.png" alt="Artesanos Mullu Wasi" onerror="this.src='../assets/img/placeholder.png'">
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <footer>
     <p>Mullu Wasi — La artesanía es el reflejo de tradición y cultura. © Derechos de autor Mullu Wasi.</p>
@@ -185,9 +244,74 @@
 
   <!-- seed debe cargarse antes del script que renderiza productos -->
   <script src="../assets/js/seed_products.js"></script>
-  <!-- script para renderizar productos en index (in-line para facilitar pegar) -->
+
   <script>
-    // Usa mullu_products
+    /************* SLIDER (full-width) *************/
+    (function(){
+      const slidesEl = document.getElementById('slides');
+      const slides = Array.from(slidesEl.children);
+      const dotsEl = document.getElementById('dots');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const slider = document.getElementById('mainSlider');
+
+      let current = 0;
+      const interval = 4500;
+      let timer = null;
+      let autoplay = true;
+
+      // build dots
+      slides.forEach((s, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Ir a la diapositiva ' + (i+1));
+        dot.dataset.index = i;
+        dot.addEventListener('click', () => gotoSlide(i));
+        dotsEl.appendChild(dot);
+      });
+
+      function updateUI(){
+        slides.forEach((s,i) => {
+          const active = i === current;
+          s.classList.toggle('active', active);
+          s.style.display = active ? 'block' : 'none';
+          s.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        Array.from(dotsEl.children).forEach((d,i)=> d.classList.toggle('active', i===current));
+      }
+
+      function gotoSlide(i){
+        current = (i + slides.length) % slides.length;
+        updateUI();
+        resetAutoplay();
+      }
+
+      prevBtn.addEventListener('click', ()=> gotoSlide(current - 1));
+      nextBtn.addEventListener('click', ()=> gotoSlide(current + 1));
+
+      function startAutoplay(){
+        stopAutoplay();
+        timer = setInterval(()=> gotoSlide(current + 1), interval);
+      }
+      function stopAutoplay(){ if(timer){ clearInterval(timer); timer = null; } }
+      function resetAutoplay(){ if(autoplay) { stopAutoplay(); startAutoplay(); } }
+
+      slider.addEventListener('mouseenter', ()=> { autoplay = false; stopAutoplay(); });
+      slider.addEventListener('mouseleave', ()=> { autoplay = true; startAutoplay(); });
+      slider.addEventListener('focusin', ()=> { autoplay = false; stopAutoplay(); });
+      slider.addEventListener('focusout', ()=> { autoplay = true; startAutoplay(); });
+
+      slider.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowLeft') gotoSlide(current - 1);
+        if(e.key === 'ArrowRight') gotoSlide(current + 1);
+      });
+
+      // init
+      updateUI();
+      startAutoplay();
+    })();
+
+    /************* PRODUCTS GRID (limit 12) *************/
     function getProducts(){ try { return JSON.parse(localStorage.getItem('mullu_products') || '[]'); } catch(e){ return []; } }
     function getCart(){ try { return JSON.parse(localStorage.getItem('mullu_cart') || '[]'); } catch(e){ return []; } }
     function saveCart(c){ localStorage.setItem('mullu_cart', JSON.stringify(c)); window.dispatchEvent(new Event('storage')); }
@@ -198,14 +322,20 @@
     const searchMain = document.getElementById('searchMain');
 
     function renderGrid(filter=''){
-      const prods = getProducts();
-      const list = (filter && filter.trim()) ? prods.filter(p => (p.name||'').toLowerCase().includes(filter.toLowerCase()) || (p.desc||'').toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase())) : prods;
+      const prods = getProducts() || [];
+      // prefer more vendidos first
+      prods.sort((a,b)=> (b.sold||0) - (a.sold||0));
+      let list = (filter && filter.trim())
+        ? prods.filter(p => (p.name||'').toLowerCase().includes(filter.toLowerCase()) || (p.desc||'').toLowerCase().includes(filter.toLowerCase()) || (p.category||'').toLowerCase().includes(filter.toLowerCase()))
+        : prods;
+      // limit to 12 items
+      list = list.slice(0, 12);
       if(!list || list.length === 0){ grid.innerHTML=''; noProducts.style.display='block'; return; }
       noProducts.style.display='none';
       grid.innerHTML = list.map(p => {
         const img = p.image || '../assets/img/placeholder.png';
-        return `<article class="product-card" data-id="${p.id}">
-          <img class="product-image" src="${img}" alt="${escapeHtml(p.name)}" loading="lazy">
+        return `<article class="product-card" data-id="${escapeHtml(p.id)}">
+          <img class="product-image" src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" loading="lazy">
           <div class="product-body">
             <div>
               <div class="prod-title">${escapeHtml(p.name)}</div>
@@ -217,8 +347,8 @@
                 <div class="small">Stock: ${p.stock != null ? p.stock : '-'}</div>
               </div>
               <div class="prod-actions">
-                <button class="btn btn-primary btn-add" data-id="${p.id}">Añadir</button>
-                <button class="btn btn-ghost" onclick="location.href='detalledeproductos.html?id=${p.id}'">Ver</button>
+                <button class="btn btn-primary btn-add" data-id="${escapeHtml(p.id)}" aria-label="Añadir ${escapeHtml(p.name)} al carrito">Añadir</button>
+                <button class="btn btn-ghost" onclick="location.href='detalledeproductos.html?id=${encodeURIComponent(p.id)}'">Ver</button>
               </div>
             </div>
           </div>
@@ -241,7 +371,6 @@
       else cart.push({ id: p.id, name: p.name, price: p.price, qty: 1, image: p.image || '', category: p.category });
       saveCart(cart);
       updateCartCount();
-      // pequeño feedback
       const btn = document.querySelector('.btn-add[data-id="'+id+'"]');
       if(btn){ btn.textContent = 'Añadido'; setTimeout(()=> btn.textContent = 'Añadir', 900); }
     }
@@ -253,7 +382,7 @@
 
     function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-    // eventos
+    // listeners
     searchMain.addEventListener('input', (e) => renderGrid(e.target.value));
     window.addEventListener('storage', (e)=> { if(e.key === 'mullu_cart') updateCartCount(); if(e.key === 'mullu_products') renderGrid(searchMain.value); });
 
