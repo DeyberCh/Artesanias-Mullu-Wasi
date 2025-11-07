@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Artesanos | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); --muted:#375d57; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; padding:.9rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; position:sticky; top:0; z-index:50; }
+    .logo{ font-weight:800 }
+    .container{ max-width:1100px; margin:1rem auto; padding:1rem; }
+    h1{ color:var(--accent); margin:0 0 .8rem 0 }
+    .controls{ display:flex; gap:.6rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
+    .search{ padding:.5rem .6rem; border-radius:8px; border:1px solid #e2ece7; width:300px; }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; }
+    .card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 8px 30px rgba(2,20,18,0.06); display:flex; flex-direction:column; cursor:pointer; transition:transform .18s ease; }
+    .card:hover{ transform:translateY(-6px); }
+    .avatar{ height:160px; background:#f4f7f5; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .avatar img{ width:100%; height:100%; object-fit:cover; }
+    .body{ padding:.8rem; }
+    .name{ font-weight:800; color:#163; margin-bottom:.35rem; }
+    .small{ font-size:.9rem; color:var(--muted) }
+    /* modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:80; }
+    .modal-card{ width:94%; max-width:920px; max-height:90vh; overflow:auto; background:#fff; border-radius:12px; padding:1rem; box-shadow:0 18px 60px rgba(2,20,18,0.35); }
+    .grid-modal{ display:grid; grid-template-columns: 260px 1fr; gap:1rem; }
+    .meta img{ width:100%; height:220px; object-fit:cover; border-radius:8px; }
+    .prod-list{ display:grid; grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); gap:.6rem; margin-top:.6rem; }
+    .prod-item{ background:#f9fffc; border-radius:8px; padding:.5rem; text-align:center; box-shadow:0 6px 18px rgba(2,20,18,0.04) }
+    @media(max-width:900px){ .grid-modal{ grid-template-columns: 1fr; } .meta img{ height:180px } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌀 Mullu Wasi</div>
+    <nav>
+      <a href="index.html" style="color:#fff;text-decoration:none;font-weight:700;margin-right:1rem">Inicio</a>
+      <a href="talleres.html" style="color:#fff;text-decoration:none;font-weight:700">Talleres</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Artesanos</h1>
+    <p class="small">Artesanos del Barrio Mollepampa — Cajamarca. Haz clic en un artesano para ver su perfil y productos.</p>
+
+    <div class="controls" style="margin-top:.6rem">
+      <input id="searchArt" class="search" placeholder="Buscar artesano o taller..." />
+      <select id="filterByCategory" style="padding:.5rem .6rem;border-radius:8px;border:1px solid #e2ece7">
+        <option value="">Todas las categorías</option>
+      </select>
+    </div>
+
+    <section>
+      <div id="artGrid" class="grid" role="list" aria-live="polite"></div>
+      <div id="noArt" style="display:none;color:#567c74;margin-top:1rem">No se encontraron artesanos.</div>
+    </section>
+  </main>
+
+  <!-- modal artesano -->
+  <div id="artModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h2 id="modalArtName">Artesano</h2>
+          <div class="small" id="modalArtTaller">Taller: -</div>
+          <div class="small" id="modalArtContact">Contacto: -</div>
+        </div>
+        <div>
+          <button id="closeArt" class="close-btn" style="background:#c94b4b;color:#fff;padding:.45rem .65rem;border:none;border-radius:8px;cursor:pointer;font-weight:700">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="grid-modal" style="margin-top:.8rem">
+        <div class="meta">
+          <img id="modalArtImg" src="../assets/img/placeholder.png" alt="Foto artesano">
+          <div style="margin-top:.6rem">
+            <strong>Breve presentación</strong>
+            <p id="modalArtBio" class="small" style="margin-top:.4rem">Artesano del Barrio Mollepampa.</p>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="margin:0;color:var(--accent)">Productos</h3>
+          <div id="modalArtProducts" class="prod-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="../assets/js/seed_products.js"></script>
+<script>
+  // Keys
+  const PRODUCTS_KEY = 'mullu_products';
+  const ARTISANS_KEY = 'mullu_artisans'; // optional extended data
+
+  // DOM
+  const artGrid = document.getElementById('artGrid');
+  const searchArt = document.getElementById('searchArt');
+  const filterByCategory = document.getElementById('filterByCategory');
+  const noArt = document.getElementById('noArt');
+
+  const artModal = document.getElementById('artModal');
+  const modalArtName = document.getElementById('modalArtName');
+  const modalArtImg = document.getElementById('modalArtImg');
+  const modalArtTaller = document.getElementById('modalArtTaller');
+  const modalArtContact = document.getElementById('modalArtContact');
+  const modalArtBio = document.getElementById('modalArtBio');
+  const modalArtProducts = document.getElementById('modalArtProducts');
+  const closeArt = document.getElementById('closeArt');
+
+  // helpers
+  function getProducts(){ try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch(e){ return []; } }
+  function getArtisans(){ try { return JSON.parse(localStorage.getItem(ARTISANS_KEY) || 'null') || []; } catch(e){ return []; } }
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // build artisans list from products (unique names)
+  function buildArtisans(){
+    const prods = getProducts();
+    const map = {};
+    prods.forEach(p => {
+      const aName = (p.artisan || 'Artesano desconocido').trim();
+      if(!map[aName]) map[aName] = { name: aName, img: p.image || '../assets/img/placeholder.png', contact: 'No disponible', taller: aName, bio: '', products: [] };
+      map[aName].products.push(p);
+      // if product has artisan/taller information in separate fields, could be used
+    });
+
+    // merge with stored artisan profiles if exist
+    const extra = getArtisans();
+    if(extra && Array.isArray(extra)){
+      extra.forEach(e => {
+        const key = e.name;
+        if(map[key]){
+          if(e.photo) map[key].img = e.photo;
+          if(e.contact) map[key].contact = e.contact;
+          if(e.taller) map[key].taller = e.taller;
+          if(e.bio) map[key].bio = e.bio;
+        } else {
+          // include artisans without products
+          map[key] = { name: key, img: e.photo || '../assets/img/placeholder.png', contact: e.contact || 'No disponible', taller: e.taller || '', bio: e.bio || '', products: [] };
+        }
+      });
+    }
+
+    // to array sorted by number of products
+    return Object.values(map).map(a => ({ ...a, count: a.products.length })).sort((a,b) => b.count - a.count);
+  }
+
+  function getCategoriesFromProducts(){
+    const prods = getProducts();
+    const s = new Set();
+    prods.forEach(p => s.add(p.category || 'Otros'));
+    return Array.from(s).sort();
+  }
+
+  // render artisans grid
+  function renderArtisans(){
+    const q = (searchArt.value || '').trim().toLowerCase();
+    const cat = (filterByCategory.value || '').trim();
+    const artisans = buildArtisans();
+    const filtered = artisans.filter(a => {
+      if(q && !a.name.toLowerCase().includes(q) && !a.taller.toLowerCase().includes(q)) return false;
+      if(cat && cat !== '' && !a.products.some(p => (p.category||'').toLowerCase() === cat.toLowerCase())) return false;
+      return true;
+    });
+
+    if(!filtered.length){
+      artGrid.innerHTML = '';
+      noArt.style.display = 'block';
+      return;
+    }
+    noArt.style.display = 'none';
+
+    artGrid.innerHTML = filtered.map(a => {
+      const img = a.img || '../assets/img/placeholder.png';
+      return `<article class="card" data-name="${escapeHtml(a.name)}" tabindex="0">
+        <div class="avatar"><img src="${escapeHtml(img)}" alt="${escapeHtml(a.name)}" onerror="this.src='../assets/img/placeholder.png'"></div>
+        <div class="body">
+          <div class="name">${escapeHtml(a.name)}</div>
+          <div class="small">Taller: ${escapeHtml(a.taller || '-')}</div>
+          <div class="small">${a.count} producto(s)</div>
+        </div>
+      </article>`;
+    }).join('');
+
+    Array.from(artGrid.querySelectorAll('.card')).forEach(c => {
+      c.addEventListener('click', () => openArt(c.dataset.name));
+      c.addEventListener('keydown', (e) => { if(e.key === 'Enter') openArt(c.dataset.name); });
+    });
+  }
+
+  // open artisan modal
+  function openArt(name){
+    const artisans = buildArtisans();
+    const a = artisans.find(x => x.name === name);
+    if(!a) return alert('Artesano no encontrado');
+    modalArtName.textContent = a.name;
+    modalArtImg.src = a.img || '../assets/img/placeholder.png';
+    modalArtTaller.textContent = 'Taller: ' + (a.taller || '-');
+    modalArtContact.textContent = 'Contacto: ' + (a.contact || 'No disponible');
+    modalArtBio.textContent = a.bio || 'Artesano del Barrio Mollepampa.';
+    modalArtProducts.innerHTML = (a.products || []).map(p => {
+      return `<div class="prod-item">
+        <img src="${escapeHtml(p.image || '../assets/img/placeholder.png')}" alt="${escapeHtml(p.name)}" style="width:100%;height:90px;object-fit:cover;border-radius:6px">
+        <div style="margin-top:.4rem;font-weight:700">${escapeHtml(p.name)}</div>
+        <div class="small">S/ ${Number(p.price||0).toFixed(2)}</div>
+        <div style="margin-top:.3rem"><a href="detalledeproductos.html?id=${encodeURIComponent(p.id)}" style="text-decoration:none;color:var(--accent);font-weight:700">Ver</a></div>
+      </div>`;
+    }).join('') || '<div class="small" style="margin-top:.6rem">Este artesano no tiene productos registrados.</div>';
+
+    artModal.style.display = 'flex';
+  }
+
+  closeArt.addEventListener('click', () => artModal.style.display = 'none');
+  artModal.addEventListener('click', (e) => { if(e.target === artModal) artModal.style.display = 'none'; });
+
+  // init
+  (function init(){
+    const cats = getCategoriesFromProducts();
+    cats.forEach(c => {
+      const opt = document.createElement('option'); opt.value = c; opt.textContent = c; filterByCategory.appendChild(opt);
+    });
+    renderArtisans();
+  })();
+
+  [searchArt, filterByCategory].forEach(el => el.addEventListener('input', renderArtisans));
+  window.addEventListener('storage', (e) => { if(e.key === PRODUCTS_KEY || e.key === ARTISANS_KEY) renderArtisans(); });
+</script>
+</body>
+</html>

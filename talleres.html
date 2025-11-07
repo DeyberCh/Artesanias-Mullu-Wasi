@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Talleres | Mullu Wasi</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    :root{ --accent: rgb(4,68,62); --bg: rgb(227,237,232); --muted:#375d57; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#043e39; -webkit-font-smoothing:antialiased; }
+    header{ background:var(--accent); color:#fff; padding:.9rem 1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; position:sticky; top:0; z-index:50; }
+    .logo{ font-weight:800 }
+    .container{ max-width:1100px; margin:1rem auto; padding:1rem; }
+    h1{ color:var(--accent); margin:0 0 .8rem 0 }
+    .controls{ display:flex; gap:.6rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
+    .search{ padding:.5rem .6rem; border-radius:8px; border:1px solid #e2ece7; width:300px; }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap:1rem; }
+    .card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 8px 30px rgba(2,20,18,0.06); display:flex; flex-direction:column; cursor:pointer; transition:transform .18s ease; }
+    .card:hover{ transform:translateY(-6px); }
+    .card .img{ height:160px; background:#f4f7f5; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .card .img img{ width:100%; height:100%; object-fit:cover; }
+    .card .body{ padding:.8rem; }
+    .card .title{ font-weight:800; color:#163; margin-bottom:.35rem; }
+    .card .sub{ font-size:.9rem; color:var(--muted); }
+    /* modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:80; }
+    .modal-card{ width:94%; max-width:920px; max-height:90vh; overflow:auto; background:#fff; border-radius:12px; padding:1rem; box-shadow:0 18px 60px rgba(2,20,18,0.35); }
+    .modal-grid{ display:grid; grid-template-columns: 320px 1fr; gap:1rem; align-items:start; }
+    .meta img{ width:100%; height:240px; object-fit:cover; border-radius:8px; background:#f4f7f5; }
+    .meta h2{ margin:0; color:var(--accent) }
+    .close-btn{ background:#c94b4b; color:#fff; border:none; padding:.45rem .65rem; border-radius:8px; cursor:pointer; font-weight:700; }
+    .product-list{ display:grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap:.6rem; margin-top:.6rem; }
+    .prod-card{ background:#f9fffc; border-radius:8px; padding:.5rem; box-shadow:0 6px 18px rgba(2,20,18,0.04); display:flex; flex-direction:column; gap:.4rem; }
+    .prod-card img{ width:100%; height:100px; object-fit:cover; border-radius:6px; }
+    .small{ font-size:.9rem; color:var(--muted) }
+    @media(max-width:900px){ .modal-grid{ grid-template-columns: 1fr; } .meta img{ height:180px } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌀 Mullu Wasi</div>
+    <nav>
+      <a href="index.html" style="color:#fff;text-decoration:none;font-weight:700;margin-right:1rem">Inicio</a>
+      <a href="categorias.html" style="color:#fff;text-decoration:none;font-weight:700">Categorías</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Talleres</h1>
+    <p class="small">Talleres de producción artesanal y turismo vivencial. Haz clic sobre un taller para ver más detalles y sus productos.</p>
+
+    <div class="controls" style="margin-top:.6rem">
+      <input id="searchTaller" class="search" placeholder="Buscar taller..." />
+      <select id="filterCategory" style="padding:.5rem .6rem;border-radius:8px;border:1px solid #e2ece7;">
+        <option value="">Todas las categorías</option>
+      </select>
+    </div>
+
+    <section>
+      <div id="tallerGrid" class="grid" role="list" aria-live="polite"></div>
+      <div id="noTaller" style="display:none;color:#567c74;margin-top:1rem">No se encontraron talleres.</div>
+    </section>
+  </main>
+
+  <!-- Modal taller -->
+  <div id="tallerModal" class="modal" style="display:none">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h2 id="modalTallerName">Taller</h2>
+          <div class="small" id="modalTallerAddr">Dirección: -</div>
+          <div class="small" id="modalTallerContact">Contacto: -</div>
+        </div>
+        <div>
+          <button id="closeTaller" class="close-btn">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="modal-grid" style="margin-top:.8rem">
+        <div class="meta">
+          <img id="modalTallerImg" src="../assets/img/placeholder.png" alt="Imagen taller">
+          <div style="margin-top:.6rem">
+            <strong>Artesanos integrantes</strong>
+            <div id="modalTallerArtisans" class="small" style="margin-top:.4rem"></div>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="margin:0;color:var(--accent)">Productos del taller</h3>
+          <div id="modalTallerProducts" class="product-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="../assets/js/seed_products.js"></script>
+<script>
+  // Keys
+  const PRODUCTS_KEY = 'mullu_products';
+  const WORKSHOPS_KEY = 'mullu_workshops'; // optional additional info
+  const ARTISANS_KEY = 'mullu_artisans'; // optional
+
+  // DOM
+  const tallerGrid = document.getElementById('tallerGrid');
+  const searchTaller = document.getElementById('searchTaller');
+  const filterCategory = document.getElementById('filterCategory');
+  const noTaller = document.getElementById('noTaller');
+
+  const tallerModal = document.getElementById('tallerModal');
+  const modalTallerName = document.getElementById('modalTallerName');
+  const modalTallerImg = document.getElementById('modalTallerImg');
+  const modalTallerAddr = document.getElementById('modalTallerAddr');
+  const modalTallerContact = document.getElementById('modalTallerContact');
+  const modalTallerArtisans = document.getElementById('modalTallerArtisans');
+  const modalTallerProducts = document.getElementById('modalTallerProducts');
+  const closeTaller = document.getElementById('closeTaller');
+
+  // helpers
+  function getProducts(){ try { return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]'); } catch(e){ return []; } }
+  function getWorkshops(){ try { return JSON.parse(localStorage.getItem(WORKSHOPS_KEY) || 'null') || []; } catch(e){ return []; } }
+  function getArtisans(){ try { return JSON.parse(localStorage.getItem(ARTISANS_KEY) || 'null') || []; } catch(e){ return []; } }
+  function escapeHtml(t){ if(!t) return ''; return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // Build workshops list from products (group by artisan/workshop field)
+  function buildWorkshops(){
+    const products = getProducts();
+    // Map: workshopName -> { name, image, address, contact, artisans:Set, products:[] }
+    const map = {};
+    products.forEach(p => {
+      const wsName = (p.artisan || 'Taller desconocido').trim();
+      if(!map[wsName]) map[wsName] = { name: wsName, image: p.image || '../assets/img/placeholder.png', address: 'Mollepampa, Cajamarca', contact: 'No disponible', artisans: new Set(), products: [] };
+      map[wsName].products.push(p);
+      // assume artisan personal name may exist in artisanProfiles (if not use same as workshop)
+      map[wsName].artisans.add(p.artisan || wsName);
+    });
+
+    // merge extra workshop info from localStorage if exists
+    const extra = getWorkshops();
+    if(extra && Array.isArray(extra)){
+      extra.forEach(e => {
+        const key = e.name || e.id;
+        if(map[key]){
+          if(e.image) map[key].image = e.image;
+          if(e.address) map[key].address = e.address;
+          if(e.contact) map[key].contact = e.contact;
+        } else {
+          // include workshops with no products
+          map[key] = { name: key, image: e.image || '../assets/img/placeholder.png', address: e.address || 'Mollepampa, Cajamarca', contact: e.contact || 'No disponible', artisans: new Set(e.artisans || []), products: [] };
+        }
+      });
+    }
+
+    // transform to array
+    const arr = Object.values(map).map(w => ({ ...w, artisans: Array.from(w.artisans), count: w.products.length }));
+    // sort by count desc
+    arr.sort((a,b) => b.count - a.count);
+    return arr;
+  }
+
+  function getCategoriesFromProducts(){
+    const prods = getProducts();
+    const set = new Set();
+    prods.forEach(p => set.add(p.category || 'Otros'));
+    return Array.from(set).sort();
+  }
+
+  // render grid
+  function renderGrid(){
+    const q = (searchTaller.value || '').trim().toLowerCase();
+    const cat = (filterCategory.value || '').trim();
+    const workshops = buildWorkshops();
+    const filtered = workshops.filter(w => {
+      if(q && !w.name.toLowerCase().includes(q) && !w.artisans.join(' ').toLowerCase().includes(q)) return false;
+      if(cat && cat !== '' && !w.products.some(p => (p.category||'').toLowerCase() === cat.toLowerCase())) return false;
+      return true;
+    });
+
+    if(!filtered.length){
+      tallerGrid.innerHTML = '';
+      noTaller.style.display = 'block';
+      return;
+    }
+    noTaller.style.display = 'none';
+
+    tallerGrid.innerHTML = filtered.map(w => {
+      const img = w.image || '../assets/img/placeholder.png';
+      return `<article class="card" data-name="${escapeHtml(w.name)}" tabindex="0">
+        <div class="img"><img src="${escapeHtml(img)}" alt="${escapeHtml(w.name)}" onerror="this.src='../assets/img/placeholder.png'"></div>
+        <div class="body">
+          <div class="title">${escapeHtml(w.name)}</div>
+          <div class="sub">${w.count} producto(s) • ${escapeHtml(w.artisans.slice(0,2).join(', '))}</div>
+        </div>
+      </article>`;
+    }).join('');
+
+    // attach click handlers
+    Array.from(tallerGrid.querySelectorAll('.card')).forEach(card => {
+      card.addEventListener('click', () => openTaller(card.dataset.name));
+      card.addEventListener('keydown', (e) => { if(e.key === 'Enter') openTaller(card.dataset.name); });
+    });
+  }
+
+  // open modal for workshop
+  function openTaller(name){
+    const workshops = buildWorkshops();
+    const w = workshops.find(x => x.name === name);
+    if(!w) return alert('Taller no encontrado');
+    modalTallerName.textContent = w.name;
+    modalTallerImg.src = w.image || '../assets/img/placeholder.png';
+    modalTallerAddr.textContent = 'Dirección: ' + (w.address || 'Mollepampa, Cajamarca');
+    modalTallerContact.textContent = 'Contacto: ' + (w.contact || 'No disponible');
+    modalTallerArtisans.innerHTML = w.artisans.map(a => `<div>${escapeHtml(a)}</div>`).join('');
+    // list products
+    modalTallerProducts.innerHTML = (w.products || []).map(p => {
+      const img = p.image || '../assets/img/placeholder.png';
+      return `<div class="prod-card">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" onerror="this.src='../assets/img/placeholder.png'">
+        <strong style="font-size:.95rem">${escapeHtml(p.name)}</strong>
+        <div class="small">S/ ${Number(p.price||0).toFixed(2)}</div>
+        <div style="margin-top:.3rem"><a href="detalledeproductos.html?id=${encodeURIComponent(p.id)}" style="text-decoration:none;color:var(--accent);font-weight:700">Ver detalle</a></div>
+      </div>`;
+    }).join('') || '<div class="small" style="margin-top:.6rem">No hay productos para este taller.</div>';
+
+    tallerModal.style.display = 'flex';
+  }
+
+  // close
+  closeTaller.addEventListener('click', () => { tallerModal.style.display = 'none'; });
+  tallerModal.addEventListener('click', (e) => { if(e.target === tallerModal) tallerModal.style.display = 'none'; });
+
+  // populate category filter
+  (function init(){
+    const cats = getCategoriesFromProducts();
+    cats.forEach(c => {
+      const opt = document.createElement('option'); opt.value = c; opt.textContent = c; filterCategory.appendChild(opt);
+    });
+    renderGrid();
+  })();
+
+  // listeners
+  [searchTaller, filterCategory].forEach(el => el.addEventListener('input', renderGrid));
+  window.addEventListener('storage', (e) => { if(e.key === PRODUCTS_KEY) { renderGrid(); } });
+</script>
+</body>
+</html>

@@ -56,6 +56,8 @@
       <button id="btnOpenClient" class="btn btn-ghost">Ver sitio cliente</button>
       <button id="btnUsers" class="btn btn-ghost">Usuarios</button>
       <button id="btnCategorias" class="btn btn-ghost">Categorías</button>
+      <button id="btnProductosadmin" class="btn btn-ghost">Productos</button>
+      <button id="btnAjustes" class="btn btn-ghost">Ajustes</button>
       <button id="btnLogout" class="btn btn-danger">Cerrar sesión</button>
     </div>
   </header>
@@ -508,6 +510,8 @@
   btnOpenClient.addEventListener('click', () => { window.open('../index.html', '_blank'); });
   btnUsers.addEventListener('click', () => { window.location.href = 'usuarios.html'; });
   btnCategorias.addEventListener('click', () => { window.location.href = 'categorias-admin.html'; });
+  btnProductosadmin.addEventListener('click', () => { window.location.href = 'productos-admin.html'; });
+  btnAjustes.addEventListener('click', () => { window.location.href = 'ajustes.html'; });
 
   // react to storage updates
   window.addEventListener('storage', (e) => {
